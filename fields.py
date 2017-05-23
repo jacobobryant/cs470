@@ -3,7 +3,6 @@ import json
 from time import sleep
 import numpy as np
 import math
-from functools import reduce
 
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
@@ -33,27 +32,15 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
-def normalize(vector, action=None):
+def normalize(vector):
     length = np.linalg.norm(vector)
-    if length > max_speed or action == "maximize":
+    if length > max_speed:
         return [element * max_speed / length for element in vector]
-    elif length < min_speed or action == "minimize":
-        return [element * min_speed / length for element in vector]
     return vector
 
-def attraction_field(robot_center, target_center, obstacle_center_list):
-    return normalize(np.subtract(target_center, robot_center), "maximize")
-
-def repulsion_field(robot_center, target_center, obstacle_center_list):
-    return (0, 0)
-
-def creative_field(robot_center, target_center, obstacle_center_list):
-    return (0, 0)
-
 def get_vector(robot, target, obstacles):
-    field_list = [attraction_field, repulsion_field, creative_field]
-    return normalize(reduce(np.add, [field(robot["center"], target["center"], obstacles)
-                                     for field in field_list]))
+    # TODO add potential fields here
+    return normalize(np.subtract(target["center"], robot["center"]))
 
 def closer_side(robot, target):
     distance = lambda corner: np.linalg.norm(np.subtract(target["center"], corner))
@@ -66,18 +53,17 @@ def get_command(robot, target, obstacles):
     vector = get_vector(robot, target, obstacles)
     angle = angle_between(robot["orientation"], vector)
     turn_direction = closer_side(robot, target)
-    magnitude = np.linalg.norm(vector)
 
     if angle >= math.pi/3:
         # robot is facing away from the target
         if turn_direction == "right":
-            return magnitude, -1 * magnitude
-        return -1 * magnitude, magnitude
+            return max_speed, -1 * max_speed
+        return -1 * max_speed, max_speed
 
     # robot is facing roughly towards the target
     cos = math.cos(angle)
-    inner_wheel_speed = max(cos * magnitude, min_speed)
-    outer_wheel_speed = magnitude * 2 - inner_wheel_speed
+    inner_wheel_speed = max(int(cos * max_speed), min_speed)
+    outer_wheel_speed = max_speed * 2 - inner_wheel_speed
     if turn_direction == "right":
         return outer_wheel_speed, inner_wheel_speed
     return inner_wheel_speed, outer_wheel_speed
@@ -85,7 +71,7 @@ def get_command(robot, target, obstacles):
 def positions(data, target_num):
     robot = data.get("robot", None)
     target = data.get(target_num, None)
-    obstacles = [data[key]["center"] for key in data if key not in ('time', 'robot', target_num)]
+    obstacles = [data[key] for key in data if key not in ('time', 'robot', target_num)]
     return robot, target, obstacles
 
 def main(host, port, target_num):
@@ -115,7 +101,7 @@ def main(host, port, target_num):
     while True:
         try:
             arg_list = get_command(*get_positions())
-            do("speed " + " ".join(str(int(arg)) for arg in arg_list))
+            do("speed " + " ".join(str(arg) for arg in arg_list))
             sleep(0.4)
 
             # reset the motors
