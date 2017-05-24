@@ -21,8 +21,12 @@ example3 = {"robot": {"corners": [[787.0, 208.0], [756.0, 107.0], [859.0, 75.0],
 # target is on right side of robot
 example4 = {"robot": {"corners": [[898.0, 68.0], [882.0, 173.0], [775.0, 157.0], [792.0, 52.0]], "center": [836.75, 112.5], "orientation": [0.98890221118927, 0.14856746792793274]}, "21": {"corners": [[932.0, 390.0], [967.0, 478.0], [877.0, 514.0], [841.0, 426.0]], "center": [904.25, 452.0], "orientation": [0.9291830658912659, -0.36961978673934937]}, "time": 2248804.190855203}
 
-max_speed = 10
+# the max speed is more like average max speed per wheel. For instance, when
+# turning, the robot could have speed values of (10, 6) if max_speed is 8.
+max_speed = 8
 min_speed = 4
+# decrease alpha to make the robot go slower when near the target
+alpha = 1
 
 def unit_vector(vector):
     return vector / np.linalg.norm(vector)
@@ -33,26 +37,29 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
-def normalize(vector, action=None):
+def normalize(vector):
     length = np.linalg.norm(vector)
-    if length > max_speed or action == "maximize":
+    if length > max_speed:
         return [element * max_speed / length for element in vector]
-    elif length < min_speed or action == "minimize":
-        return [element * min_speed / length for element in vector]
     return vector
 
-def attraction_field(robot_center, target_center, obstacle_center_list):
-    return normalize(np.subtract(target_center, robot_center), "maximize")
+def attraction_field(robot, target, obstacle_list):
+    radius = np.linalg.norm(np.subtract(target["center"], target["corners"][0])) * 2
+    vector = np.subtract(target["center"], robot["center"])
+    distance = np.linalg.norm(vector)
+    if distance < radius:
+        return (0, 0)
+    return normalize(alpha * vector)
 
-def repulsion_field(robot_center, target_center, obstacle_center_list):
+def repulsion_field(robot, target, obstacle_list):
     return (0, 0)
 
-def creative_field(robot_center, target_center, obstacle_center_list):
+def creative_field(robot, target, obstacle_list):
     return (0, 0)
 
 def get_vector(robot, target, obstacles):
     field_list = [attraction_field, repulsion_field, creative_field]
-    return normalize(reduce(np.add, [field(robot["center"], target["center"], obstacles)
+    return normalize(reduce(np.add, [field(robot, target, obstacles)
                                      for field in field_list]))
 
 def closer_side(robot, target):
@@ -64,12 +71,15 @@ def get_command(robot, target, obstacles):
         return (0, 0)
 
     vector = get_vector(robot, target, obstacles)
+    if not any(vector):
+        # vector == (0, 0)
+        return vector
+
     angle = angle_between(robot["orientation"], vector)
     turn_direction = closer_side(robot, target)
-    #magnitude = np.linalg.norm(vector)
-    magnitude = max_speed
+    magnitude = np.linalg.norm(vector)
 
-    if angle >= math.pi/3:
+    if angle >= math.pi/2:
         # robot is facing away from the target
         if turn_direction == "right":
             return min_speed, -1 * min_speed
@@ -105,44 +115,29 @@ def main(host, port, target_num):
 
     def get_positions():
         while True:
-            data = json.loads(do('where'))
-            if "robot" in data:
-                break
+            try:
+                data = json.loads(do('where'))
+                if "robot" in data:
+                    return positions(data, target_num)
+            except json.decoder.JSONDecodeError:
+                pass
             print("server returned bad response")
             sleep(0.1)
 
-        return positions(data, target_num)
 
+    _, target, obstacles = get_positions()
     while True:
-        try:
-            arg_list = map(lambda x: int(round(x)), get_command(*get_positions()))
-            #print("vector:", list(arg_list))
-            do("speed " + " ".join(str(arg) for arg in arg_list))
-            sleep(0.4)
-
-            # reset the motors
-            inverted = map(lambda x: -1 * x, arg_list)
-            do("power " + " ".join(str(arg) for arg in inverted))
-            sleep(0.2)
-        except json.decoder.JSONDecodeError:
-            print("ERROR: asyncio concatenated the command")
+        robot, _, _ = get_positions()
+        arg_list = map(lambda x: int(round(x)), get_command(robot, target, obstacles))
+        speed = do("speed " + " ".join(str(arg) for arg in arg_list))
+        sleep(0.3)
 
         do("power 0 0")
-        sleep(0.2)
+        sleep(0.3)
     
     writer.close()
 
 def run_tests():
-    #robot, target, obstacles = positions(example1, "21")
-    ##print("vector:", get_vector(robot, target, obstacles))
-    #assert need_to_turn(robot, get_vector(robot, target, obstacles)) == False
-    ##print("passed test1")
-
-    #robot, target, obstacles = positions(example2, "21")
-    ##print("vector:", get_vector(robot, target, obstacles))
-    #assert need_to_turn(robot, get_vector(robot, target, obstacles)) == True
-    ##print("passed test2")
-
     robot, target, obstacles = positions(example3, "21")
     assert closer_side(robot, target) == "left"
 
