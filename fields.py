@@ -3,6 +3,7 @@ import json
 from time import sleep
 import numpy as np
 import math
+from functools import reduce
 
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
@@ -76,6 +77,7 @@ def get_command(robot, target, obstacles):
 
     angle = angle_between(robot["orientation"], vector)
     turn_direction = closer_side(robot, target)
+    magnitude = np.linalg.norm(vector)
 
     if angle >= math.pi/2:
         # robot is facing away from the target
@@ -85,8 +87,8 @@ def get_command(robot, target, obstacles):
 
     # robot is facing roughly towards the target
     cos = math.cos(angle)
-    inner_wheel_speed = max(int(cos * max_speed), min_speed)
-    outer_wheel_speed = max_speed * 2 - inner_wheel_speed
+    inner_wheel_speed = max(cos * magnitude, min_speed)
+    outer_wheel_speed = magnitude * 2 - inner_wheel_speed
     if turn_direction == "right":
         return outer_wheel_speed, inner_wheel_speed
     return inner_wheel_speed, outer_wheel_speed
