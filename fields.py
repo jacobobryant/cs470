@@ -71,8 +71,8 @@ def get_command(robot, target, obstacles):
     if angle >= math.pi/3:
         # robot is facing away from the target
         if turn_direction == "right":
-            return magnitude, -1 * magnitude
-        return -1 * magnitude, magnitude
+            return max_speed, -1 * max_speed
+        return -1 * max_speed, max_speed
 
     # robot is facing roughly towards the target
     cos = math.cos(angle)
@@ -114,19 +114,20 @@ def main(host, port, target_num):
 
     while True:
         try:
-            arg_list = get_command(*get_positions())
-            do("speed " + " ".join(str(int(arg)) for arg in arg_list))
-            sleep(0.4)
+            arg_list = map(int, get_command(*get_positions()))
+            print("vector:", list(arg_list))
+            #do("speed " + " ".join(str(arg) for arg in arg_list))
+            #sleep(0.4)
 
-            # reset the motors
-            inverted = map(lambda x: -1 * x, arg_list)
-            do("speed " + " ".join(str(arg) for arg in inverted))
-            sleep(0.15)
+            ## reset the motors
+            #inverted = map(lambda x: -1 * x, arg_list)
+            #do("speed " + " ".join(str(arg) for arg in inverted))
+            #sleep(0.20)
         except json.decoder.JSONDecodeError:
             print("ERROR: asyncio concatenated the command")
 
-        do("power 0 0")
-        sleep(0.1)
+        #do("power 0 0")
+        sleep(1)
     
     writer.close()
 
