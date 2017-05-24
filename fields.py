@@ -21,7 +21,7 @@ example3 = {"robot": {"corners": [[787.0, 208.0], [756.0, 107.0], [859.0, 75.0],
 # target is on right side of robot
 example4 = {"robot": {"corners": [[898.0, 68.0], [882.0, 173.0], [775.0, 157.0], [792.0, 52.0]], "center": [836.75, 112.5], "orientation": [0.98890221118927, 0.14856746792793274]}, "21": {"corners": [[932.0, 390.0], [967.0, 478.0], [877.0, 514.0], [841.0, 426.0]], "center": [904.25, 452.0], "orientation": [0.9291830658912659, -0.36961978673934937]}, "time": 2248804.190855203}
 
-max_speed = 8
+max_speed = 10
 min_speed = 4
 
 def unit_vector(vector):
@@ -66,13 +66,14 @@ def get_command(robot, target, obstacles):
     vector = get_vector(robot, target, obstacles)
     angle = angle_between(robot["orientation"], vector)
     turn_direction = closer_side(robot, target)
-    magnitude = np.linalg.norm(vector)
+    #magnitude = np.linalg.norm(vector)
+    magnitude = max_speed
 
     if angle >= math.pi/3:
         # robot is facing away from the target
         if turn_direction == "right":
-            return max_speed, -1 * max_speed
-        return -1 * max_speed, max_speed
+            return min_speed, -1 * min_speed
+        return -1 * min_speed, min_speed
 
     # robot is facing roughly towards the target
     cos = math.cos(angle)
@@ -114,20 +115,20 @@ def main(host, port, target_num):
 
     while True:
         try:
-            arg_list = map(int, get_command(*get_positions()))
-            print("vector:", list(arg_list))
-            #do("speed " + " ".join(str(arg) for arg in arg_list))
-            #sleep(0.4)
+            arg_list = map(lambda x: int(round(x)), get_command(*get_positions()))
+            #print("vector:", list(arg_list))
+            do("speed " + " ".join(str(arg) for arg in arg_list))
+            sleep(0.4)
 
-            ## reset the motors
-            #inverted = map(lambda x: -1 * x, arg_list)
-            #do("speed " + " ".join(str(arg) for arg in inverted))
-            #sleep(0.20)
+            # reset the motors
+            inverted = map(lambda x: -1 * x, arg_list)
+            do("power " + " ".join(str(arg) for arg in inverted))
+            sleep(0.2)
         except json.decoder.JSONDecodeError:
             print("ERROR: asyncio concatenated the command")
 
-        #do("power 0 0")
-        sleep(1)
+        do("power 0 0")
+        sleep(0.2)
     
     writer.close()
 
