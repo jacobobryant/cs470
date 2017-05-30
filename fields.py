@@ -5,6 +5,8 @@ import numpy as np
 import math
 from functools import reduce
 
+debug = False
+
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
                                              "orientation": [0.9822942018508911, -0.1873447746038437], "center": [951.5, 534.75]},
@@ -21,12 +23,20 @@ example3 = {"robot": {"corners": [[787.0, 208.0], [756.0, 107.0], [859.0, 75.0],
 # target is on right side of robot
 example4 = {"robot": {"corners": [[898.0, 68.0], [882.0, 173.0], [775.0, 157.0], [792.0, 52.0]], "center": [836.75, 112.5], "orientation": [0.98890221118927, 0.14856746792793274]}, "21": {"corners": [[932.0, 390.0], [967.0, 478.0], [877.0, 514.0], [841.0, 426.0]], "center": [904.25, 452.0], "orientation": [0.9291830658912659, -0.36961978673934937]}, "time": 2248804.190855203}
 
-# the max speed is more like average max speed per wheel. For instance, when
-# turning, the robot could have speed values of (10, 6) if max_speed is 8.
-max_speed = 8
-min_speed = 4
-# decrease alpha to make the robot go slower when near the target
-alpha = 1
+example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [1174.0, 250.0], [1239.0, 177.0], [1317.0, 244.0]], "orientation": [-0.6754910945892334, 0.737368106842041], "center": [1245.25, 246.25]}, "29": {"corners": [[830.0, 417.0], [735.0, 410.0], [743.0, 318.0], [837.0, 323.0]], "orientation": [-0.08038419485092163, 0.9967640042304993], "center": [786.25, 367.0]}, "25": {"corners": [[400.0, 377.0], [377.0, 291.0], [466.0, 262.0], [490.0, 348.0]], "orientation": [-0.9513070583343506, 0.3082447350025177], "center": [433.25, 319.5]}}
+
+
+# The minimum speed for an individual wheel.
+min_speed = 3
+
+# The maximum angle at which the robot will move both wheels forward
+# instead of turning in place.
+max_angle = math.pi*(1/2)
+
+# The maximum proportion of the outer wheel speed to the inner wheel
+# speed when turning.
+max_proportion = 2.5
+
 
 def unit_vector(vector):
     return vector / np.linalg.norm(vector)
@@ -37,58 +47,92 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
-def normalize(vector):
-    length = np.linalg.norm(vector)
-    if length > max_speed:
-        return [element * max_speed / length for element in vector]
-    return vector
+def normalize(vector, length):
+    magnitude = np.linalg.norm(vector)
+    return (vector * length) / magnitude
+
+def radius(square):
+    return np.linalg.norm(np.subtract(square["center"],
+        square["corners"][0])) * 2
 
 def attraction_field(robot, target, obstacle_list):
-    radius = np.linalg.norm(np.subtract(target["center"], target["corners"][0])) * 2
     vector = np.subtract(target["center"], robot["center"])
+    r = radius(target)
+    spread = r * 3
     distance = np.linalg.norm(vector)
-    if distance < radius:
+    if distance > spread:
+        return normalize(vector, 1)
+    elif distance < r:
         return (0, 0)
-    return normalize(alpha * vector)
+    return normalize(vector, 100)
+
+def repulsion_vector(robot, obstacle):
+    vector = np.subtract(robot["center"], obstacle["center"])
+    r = radius(obstacle)
+    spread = r * 2
+    distance = np.linalg.norm(vector)
+    if distance > spread:
+        return (0, 0)
+    elif distance < r:
+        return 100 * vector
+    if debug:
+        print("in repulsion spread")
+    mag = ((spread - distance) / (spread - r)) * 2
+    return normalize(vector, mag)
 
 def repulsion_field(robot, target, obstacle_list):
-    return (0, 0)
+    return reduce(np.add, [0, 0] +
+            [repulsion_vector(robot, o) for o in obstacle_list])
+
+def tangent_vector(robot, obstacle):
+    vector = np.subtract(robot["center"], obstacle["center"])
+    r = radius(obstacle)
+    spread = r * 3
+    distance = np.linalg.norm(vector)
+    if distance > spread or distance < r:
+        return (0, 0)
+    return normalize(np.cross(np.append(vector, 0),
+                              [0, 0, 1])[:2], 2)
 
 def creative_field(robot, target, obstacle_list):
-    return (0, 0)
+    return reduce(np.add, [0, 0] +
+            [tangent_vector(robot, o) for o in obstacle_list])
 
 def get_vector(robot, target, obstacles):
     field_list = [attraction_field, repulsion_field, creative_field]
-    return normalize(reduce(np.add, [field(robot, target, obstacles)
-                                     for field in field_list]))
+    return reduce(np.add, [field(robot, target, obstacles)
+                           for field in field_list])
 
 def closer_side(robot, target):
     distance = lambda corner: np.linalg.norm(np.subtract(target["center"], corner))
     return "left" if distance(robot["corners"][0]) < distance(robot["corners"][1]) else "right"
 
 def get_command(robot, target, obstacles):
-    if None in (robot, target):
+    if (None in (robot, target) or
+            not any(attraction_field(robot, target, obstacles)):
         return (0, 0)
 
     vector = get_vector(robot, target, obstacles)
-    if not any(vector):
-        # vector == (0, 0)
-        return vector
-
     angle = angle_between(robot["orientation"], vector)
-    turn_direction = closer_side(robot, target)
-    magnitude = np.linalg.norm(vector)
+    turn_direction = closer_side(robot, {"center":
+            np.add(robot["center"], vector * 50)})
 
-    if angle >= math.pi/2:
+    if debug:
+        print("vector:", vector)
+        print("orientation:", robot["orientation"])
+        print("angle:", angle)
+
+    if angle >= max_angle:
         # robot is facing away from the target
         if turn_direction == "right":
             return min_speed, -1 * min_speed
         return -1 * min_speed, min_speed
 
     # robot is facing roughly towards the target
-    cos = math.cos(angle)
-    inner_wheel_speed = max(cos * magnitude, min_speed)
-    outer_wheel_speed = magnitude * 2 - inner_wheel_speed
+    proportion = 1 + (max_proportion - 1) * angle / max_angle
+    inner_wheel_speed = min_speed
+    outer_wheel_speed = min_speed * proportion
+
     if turn_direction == "right":
         return outer_wheel_speed, inner_wheel_speed
     return inner_wheel_speed, outer_wheel_speed
@@ -124,16 +168,19 @@ def main(host, port, target_num):
             print("server returned bad response")
             sleep(0.1)
 
-
     _, target, obstacles = get_positions()
     while True:
         robot, _, _ = get_positions()
+        #robot, target, obstacles = get_positions()
         arg_list = map(lambda x: int(round(x)), get_command(robot, target, obstacles))
-        speed = do("speed " + " ".join(str(arg) for arg in arg_list))
-        sleep(0.3)
 
-        do("power 0 0")
-        sleep(0.3)
+        if debug:
+            print("command:", list(arg_list))
+            print()
+            input("press Enter")
+        else:
+            do("speed " + " ".join(str(arg) for arg in arg_list))
+            sleep(0.1)
     
     writer.close()
 
