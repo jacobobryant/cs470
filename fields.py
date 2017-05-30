@@ -29,9 +29,9 @@ example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [117
 # The minimum speed for an individual wheel.
 min_speed = 3
 
-# The maximum angle at which the robot will move both wheels forward
-# instead of turning in place.
-max_angle = math.pi*(1/2)
+## The maximum angle at which the robot will move both wheels forward
+## instead of turning in place.
+#max_angle = math.pi*(1/2)
 
 # The maximum proportion of the outer wheel speed to the inner wheel
 # speed when turning.
@@ -92,7 +92,7 @@ def tangent_vector(robot, obstacle):
     if distance > spread or distance < r:
         return (0, 0)
     return normalize(np.cross(np.append(vector, 0),
-                              [0, 0, 1])[:2], 2)
+                              [0, 0, 1])[:2], 3)
 
 def creative_field(robot, target, obstacle_list):
     return reduce(np.add, [0, 0] +
@@ -103,39 +103,53 @@ def get_vector(robot, target, obstacles):
     return reduce(np.add, [field(robot, target, obstacles)
                            for field in field_list])
 
-def closer_side(robot, target):
-    distance = lambda corner: np.linalg.norm(np.subtract(target["center"], corner))
-    return "left" if distance(robot["corners"][0]) < distance(robot["corners"][1]) else "right"
+def closer_side(robot, target, front_side="front"):
+    offset = 0 if front_side == "front" else 2
+    distance = lambda corner: np.linalg.norm(np.subtract(
+        target["center"], corner))
+    return "left" if distance(robot["corners"][0+offset]) < distance(
+            robot["corners"][1+offset]) else "right"
 
 def get_command(robot, target, obstacles):
     if (None in (robot, target) or
-            not any(attraction_field(robot, target, obstacles)):
+            not any(attraction_field(robot, target, obstacles))):
         return (0, 0)
 
     vector = get_vector(robot, target, obstacles)
     angle = angle_between(robot["orientation"], vector)
+    front_side = "front"
+    if angle > math.pi/2:
+        front_side = "back"
+        angle = math.pi - angle
     turn_direction = closer_side(robot, {"center":
-            np.add(robot["center"], vector * 50)})
+            np.add(robot["center"], vector * 50)},
+            front_side)
 
     if debug:
         print("vector:", vector)
         print("orientation:", robot["orientation"])
         print("angle:", angle)
 
-    if angle >= max_angle:
-        # robot is facing away from the target
-        if turn_direction == "right":
-            return min_speed, -1 * min_speed
-        return -1 * min_speed, min_speed
+    #if angle >= math.pi/2:
+    #    # robot is facing away from the target
+    #    if turn_direction == "right":
+    #        return min_speed, -1 * min_speed
+    #    return -1 * min_speed, min_speed
 
     # robot is facing roughly towards the target
-    proportion = 1 + (max_proportion - 1) * angle / max_angle
-    inner_wheel_speed = min_speed
-    outer_wheel_speed = min_speed * proportion
+    sign = 1 if front_side == "front" else -1
+    proportion = 1 + (max_proportion - 1) * angle / (math.pi/2)
+
+    inner_wheel_speed = min_speed * sign
+    outer_wheel_speed = min_speed * proportion * sign
+    command = [inner_wheel_speed, outer_wheel_speed]
 
     if turn_direction == "right":
-        return outer_wheel_speed, inner_wheel_speed
-    return inner_wheel_speed, outer_wheel_speed
+        command.reverse()
+    if front_side == "back":
+        command.reverse()
+
+    return command
 
 def positions(data, target_num):
     robot = data.get("robot", None)
