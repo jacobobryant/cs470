@@ -6,6 +6,7 @@ import math
 from functools import reduce
 
 debug = False
+algorithm = "astar"
 
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
@@ -26,6 +27,26 @@ example4 = {"robot": {"corners": [[898.0, 68.0], [882.0, 173.0], [775.0, 157.0],
 example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [1174.0, 250.0], [1239.0, 177.0], [1317.0, 244.0]], "orientation": [-0.6754910945892334, 0.737368106842041], "center": [1245.25, 246.25]}, "29": {"corners": [[830.0, 417.0], [735.0, 410.0], [743.0, 318.0], [837.0, 323.0]], "orientation": [-0.08038419485092163, 0.9967640042304993], "center": [786.25, 367.0]}, "25": {"corners": [[400.0, 377.0], [377.0, 291.0], [466.0, 262.0], [490.0, 348.0]], "orientation": [-0.9513070583343506, 0.3082447350025177], "center": [433.25, 319.5]}}
 
 
+#   0 1 2 3 4 5 6 7 8 9
+# 0
+# 1
+# 2       * *
+# 3         * *
+# 4 S         *       E
+# 5           *
+# 6         * *
+# 7       * *
+# 8
+# 9
+#
+# EXAMPLE OUTPUT
+# path: 3,1 2,2 1,3 1,4 1,5 1,6 2,7 3,8 4,9
+grid_example1 = {"grid": set.difference({(x,y) for x in range(10)
+                                               for y in range(10)},
+                                        {(2,3), (2,4), (3,4), (3,5), (4,5),
+                                         (5,5), (6,4), (6,5), (7,3), (7,4)}),
+        "start": (4,0), "end": (4,9)}
+
 # The minimum speed for an individual wheel.
 min_speed = 3
 
@@ -37,6 +58,12 @@ min_speed = 3
 # speed when turning.
 max_proportion = 2.5
 
+def grid_coordinates(cam_coordinates, cell_length):
+    return tuple(int(x / cell_length) for x in cam_coordinates)
+
+def cam_coordinates(grid_coordinates, cell_length):
+    return tuple(int(x * cell_length + cell_length/2)
+                 for x in grid_coordinates)
 
 def unit_vector(vector):
     return vector / np.linalg.norm(vector)
@@ -55,7 +82,7 @@ def radius(square):
     return np.linalg.norm(np.subtract(square["center"],
         square["corners"][0])) * 2
 
-def attraction_field(robot, target, obstacle_list):
+def attraction_field(robot, target):
     vector = np.subtract(target["center"], robot["center"])
     r = radius(target)
     spread = r * 3
@@ -66,42 +93,42 @@ def attraction_field(robot, target, obstacle_list):
         return (0, 0)
     return normalize(vector, 100)
 
-def repulsion_vector(robot, obstacle):
-    vector = np.subtract(robot["center"], obstacle["center"])
-    r = radius(obstacle)
-    spread = r * 2
-    distance = np.linalg.norm(vector)
-    if distance > spread:
-        return (0, 0)
-    elif distance < r:
-        return 100 * vector
-    if debug:
-        print("in repulsion spread")
-    mag = ((spread - distance) / (spread - r)) * 2
-    return normalize(vector, mag)
+#def repulsion_vector(robot, obstacle):
+#    vector = np.subtract(robot["center"], obstacle["center"])
+#    r = radius(obstacle)
+#    spread = r * 2
+#    distance = np.linalg.norm(vector)
+#    if distance > spread:
+#        return (0, 0)
+#    elif distance < r:
+#        return 100 * vector
+#    if debug:
+#        print("in repulsion spread")
+#    mag = ((spread - distance) / (spread - r)) * 2
+#    return normalize(vector, mag)
 
-def repulsion_field(robot, target, obstacle_list):
-    return reduce(np.add, [0, 0] +
-            [repulsion_vector(robot, o) for o in obstacle_list])
+#def repulsion_field(robot, target, obstacle_list):
+#    return reduce(np.add, [0, 0] +
+#            [repulsion_vector(robot, o) for o in obstacle_list])
 
-def tangent_vector(robot, obstacle):
-    vector = np.subtract(robot["center"], obstacle["center"])
-    r = radius(obstacle)
-    spread = r * 3
-    distance = np.linalg.norm(vector)
-    if distance > spread or distance < r:
-        return (0, 0)
-    return normalize(np.cross(np.append(vector, 0),
-                              [0, 0, 1])[:2], 3)
+#def tangent_vector(robot, obstacle):
+#    vector = np.subtract(robot["center"], obstacle["center"])
+#    r = radius(obstacle)
+#    spread = r * 3
+#    distance = np.linalg.norm(vector)
+#    if distance > spread or distance < r:
+#        return (0, 0)
+#    return normalize(np.cross(np.append(vector, 0),
+#                              [0, 0, 1])[:2], 3)
 
-def creative_field(robot, target, obstacle_list):
-    return reduce(np.add, [0, 0] +
-            [tangent_vector(robot, o) for o in obstacle_list])
+#def creative_field(robot, target, obstacle_list):
+#    return reduce(np.add, [0, 0] +
+#            [tangent_vector(robot, o) for o in obstacle_list])
 
-def get_vector(robot, target, obstacles):
-    field_list = [attraction_field, repulsion_field, creative_field]
-    return reduce(np.add, [field(robot, target, obstacles)
-                           for field in field_list])
+#def get_vector(robot, target, obstacles):
+#    field_list = [attraction_field, repulsion_field, creative_field]
+#    return reduce(np.add, [field(robot, target, obstacles)
+#                           for field in field_list])
 
 def closer_side(robot, target, front_side="front"):
     offset = 0 if front_side == "front" else 2
@@ -110,12 +137,7 @@ def closer_side(robot, target, front_side="front"):
     return "left" if distance(robot["corners"][0+offset]) < distance(
             robot["corners"][1+offset]) else "right"
 
-def get_command(robot, target, obstacles):
-    if (None in (robot, target) or
-            not any(attraction_field(robot, target, obstacles))):
-        return (0, 0)
-
-    vector = get_vector(robot, target, obstacles)
+def get_command(robot, vector):
     angle = angle_between(robot["orientation"], vector)
     front_side = "front"
     if angle > math.pi/2:
@@ -154,8 +176,50 @@ def get_command(robot, target, obstacles):
 def positions(data, target_num):
     robot = data.get("robot", None)
     target = data.get(target_num, None)
-    obstacles = [data[key] for key in data if key not in ('time', 'robot', target_num)]
+    obstacles = tuple(data[key] for key in data
+                      if key not in ('time', 'robot', target_num))
     return robot, target, obstacles
+
+# This function handles all the steps in the project description up until the
+# a*/rrt part.
+def get_grid(obstacles):
+    cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
+                      for o in obstacles)
+    corners = tuple(corner for o in obstacles for corner in o["corners"])
+    occupied = {grid_coordinates(corner, cell_length) for corner in corners}
+    #lower_corner = [max(corner[i] for corner in corners) for i in (0,1)]
+    #max_x, max_y = [grid_coordinates(x, cell_length) for x in lower_corner]
+    #full_grid = {(x, y) for x in range(max_x) for y in range(max_y)}
+    return occupied, cell_length
+
+def get_path(robot, target, obstacles, algorithm="astar"):
+    # Get the path to follow.
+    # grid will be a set of coordinates for cells that don't have an obstacle.
+    # cell_length is the pixel width of each cell in the grid.
+    # path will be a list of grid coordinates.
+    grid, cell_length = get_grid(obstacles)
+    path = (astar if algorithm == "astar" else rrt)(grid,
+            grid_coordinates(robot["center"], cell_length),
+            grid_coordinates(target["center"], cell_length))
+    return path
+
+def astar(grid, start, end):
+    # TODO implement
+    # See grid_example1 for example input, output
+    path = []
+    return path
+
+def rrt(grid, start, end):
+    # TODO implement
+    # See grid_example1 for example input, output
+    path = []
+    return path
+
+def on_target(robot, target):
+    vector = np.subtract(target, robot["center"])
+    r = radius(robot)
+    distance = np.linalg.norm(vector)
+    return distance < r
 
 def main(host, port, target_num):
     loop = asyncio.get_event_loop()
@@ -182,11 +246,12 @@ def main(host, port, target_num):
             print("server returned bad response")
             sleep(0.1)
 
-    _, target, obstacles = get_positions()
-    while True:
-        robot, _, _ = get_positions()
-        #robot, target, obstacles = get_positions()
-        arg_list = map(lambda x: int(round(x)), get_command(robot, target, obstacles))
+    robot, target, obstacles = get_positions()
+    path = get_path(robot, target, obstacles)
+    while path:
+        target = cam_coordinates(path[0], cell_length)
+        vector = attraction_field(robot, target)
+        arg_list = map(lambda x: int(round(x)), get_command(robot, vector))
 
         if debug:
             print("command:", list(arg_list))
@@ -195,24 +260,37 @@ def main(host, port, target_num):
         else:
             do("speed " + " ".join(str(arg) for arg in arg_list))
             sleep(0.1)
+
+        robot, _, _ = get_positions()
+        if on_target(robot, target):
+            path.pop(0)
     
+    do("power 0 0")
     writer.close()
 
 def run_tests():
-    robot, target, obstacles = positions(example3, "21")
-    assert closer_side(robot, target) == "left"
+    #robot, target, obstacles = positions(example3, "21")
+    #assert closer_side(robot, target) == "left"
 
-    robot, target, obstacles = positions(example4, "21")
-    assert closer_side(robot, target) == "right"
+    #robot, target, obstacles = positions(example4, "21")
+    #assert closer_side(robot, target) == "right"
 
-    for i, ex in enumerate([example1, example2, example3, example4]):
-        print("get_command for example{}: {}".format(i + 1,
-            get_command(*positions(ex, "21"))))
-    print("^^Make sure this looks good^^")
-
-    print("All tests pass")
-
+    #for i, ex in enumerate([example1, example2, example3, example4]):
+    #    print("get_command for example{}: {}".format(i + 1,
+    #        get_command(*positions(ex, "21"))))
+    #print("^^Make sure this looks good^^")
+    args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
+    print("a* with grid_example1:", astar(*args))
+    print("rrt with grid_example1:", rrt(*args))
+    print("(should be something like "
+            "[(3,1), (2,2), (1,3), (1,4), (1,5), (1,6), (2,7), (3,8), (4,9)]")
+    print()
+    robot, target, obstacles = positions(example5, "25")
+    print("grid with example5:", get_grid(obstacles))
+    print("a* with example5:", get_path(robot, target, obstacles, "astar"))
+    print("rrt with example5:", get_path(robot, target, obstacles, "rrt"))
+    
 if __name__ == '__main__':
     from sys import argv
     run_tests()
-    main(*argv[1:])
+    #main(*argv[1:])
