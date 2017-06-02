@@ -6,7 +6,6 @@ import math
 from functools import reduce
 
 debug = False
-algorithm = "astar"
 
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
@@ -93,43 +92,6 @@ def attraction_field(robot, target):
         return (0, 0)
     return normalize(vector, 100)
 
-#def repulsion_vector(robot, obstacle):
-#    vector = np.subtract(robot["center"], obstacle["center"])
-#    r = radius(obstacle)
-#    spread = r * 2
-#    distance = np.linalg.norm(vector)
-#    if distance > spread:
-#        return (0, 0)
-#    elif distance < r:
-#        return 100 * vector
-#    if debug:
-#        print("in repulsion spread")
-#    mag = ((spread - distance) / (spread - r)) * 2
-#    return normalize(vector, mag)
-
-#def repulsion_field(robot, target, obstacle_list):
-#    return reduce(np.add, [0, 0] +
-#            [repulsion_vector(robot, o) for o in obstacle_list])
-
-#def tangent_vector(robot, obstacle):
-#    vector = np.subtract(robot["center"], obstacle["center"])
-#    r = radius(obstacle)
-#    spread = r * 3
-#    distance = np.linalg.norm(vector)
-#    if distance > spread or distance < r:
-#        return (0, 0)
-#    return normalize(np.cross(np.append(vector, 0),
-#                              [0, 0, 1])[:2], 3)
-
-#def creative_field(robot, target, obstacle_list):
-#    return reduce(np.add, [0, 0] +
-#            [tangent_vector(robot, o) for o in obstacle_list])
-
-#def get_vector(robot, target, obstacles):
-#    field_list = [attraction_field, repulsion_field, creative_field]
-#    return reduce(np.add, [field(robot, target, obstacles)
-#                           for field in field_list])
-
 def closer_side(robot, target, front_side="front"):
     offset = 0 if front_side == "front" else 2
     distance = lambda corner: np.linalg.norm(np.subtract(
@@ -187,9 +149,6 @@ def get_grid(obstacles):
                       for o in obstacles)
     corners = tuple(corner for o in obstacles for corner in o["corners"])
     occupied = {grid_coordinates(corner, cell_length) for corner in corners}
-    #lower_corner = [max(corner[i] for corner in corners) for i in (0,1)]
-    #max_x, max_y = [grid_coordinates(x, cell_length) for x in lower_corner]
-    #full_grid = {(x, y) for x in range(max_x) for y in range(max_y)}
     return occupied, cell_length
 
 def get_path(robot, target, obstacles, algorithm="astar"):
@@ -221,7 +180,7 @@ def on_target(robot, target):
     distance = np.linalg.norm(vector)
     return distance < r
 
-def main(host, port, target_num):
+def main(host, port, target_num, algorithm="astar"):
     loop = asyncio.get_event_loop()
     reader, writer = loop.run_until_complete(
         asyncio.open_connection(host, port))
@@ -247,7 +206,7 @@ def main(host, port, target_num):
             sleep(0.1)
 
     robot, target, obstacles = get_positions()
-    path = get_path(robot, target, obstacles)
+    path = get_path(robot, target, obstacles, algorithm)
     while path:
         target = cam_coordinates(path[0], cell_length)
         vector = attraction_field(robot, target)
