@@ -28,9 +28,9 @@ example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [117
 
 #   0 1 2 3 4 5 6 7 8 9
 # 0
-# 1
-# 2       * *
-# 3         * *
+# 1                    
+# 2       * *          
+# 3         * *        
 # 4 S         *       E
 # 5           *
 # 6         * *
@@ -40,10 +40,8 @@ example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [117
 #
 # EXAMPLE OUTPUT
 # path: 3,1 2,2 1,3 1,4 1,5 1,6 2,7 3,8 4,9
-grid_example1 = {"grid": set.difference({(x,y) for x in range(10)
-                                               for y in range(10)},
-                                        {(2,3), (2,4), (3,4), (3,5), (4,5),
-                                         (5,5), (6,4), (6,5), (7,3), (7,4)}),
+grid_example1 = {"grid": {(2,3), (2,4), (3,4), (3,5), (4,5),
+                          (5,5), (6,4), (6,5), (7,3), (7,4)},
         "start": (4,0), "end": (4,9)}
 
 # The minimum speed for an individual wheel.
@@ -162,11 +160,51 @@ def get_path(robot, target, obstacles, algorithm="astar"):
             grid_coordinates(target["center"], cell_length))
     return path
 
+def reconstruct_path(came_from, current):
+    total_path = [current]
+    while current in came_from.keys():
+        current = came_from[current]
+        total_path.append(current)
+    total_path.reverse()
+    return total_path
+
+def adjacent_cells(occupied, cell):
+    directions = ((x, y) for x in (-1, 0, 1)
+                         for y in (-1, 0, 1)
+                         if (x, y) != (0, 0))
+    neighbors = {tuple(np.add(cell, d)) for d in directions}
+    return set.difference(neighbors, occupied)
+
 def astar(grid, start, end):
-    # TODO implement
-    # See grid_example1 for example input, output
-    path = []
-    return path
+    dist = lambda a, b: np.linalg.norm(np.subtract(b, a))
+    closed_set = set()
+    open_set = {start}
+    came_from = {}
+    gscore = {start: 0}
+    fscore = {start: dist(start, end)}
+
+    while open_set:
+        current = min(open_set, key=lambda cell: fscore.get(cell, float('inf')))
+        if current == end:
+            return reconstruct_path(came_from, current)[1:]
+
+        open_set.remove(current)
+        closed_set.add(current)
+        for neighbor in adjacent_cells(grid, current):
+            if neighbor in closed_set:
+                continue		
+            tentative_gscore = (gscore.get(current, float('inf')) +
+                                dist(current, neighbor))
+            if neighbor not in open_set:
+                open_set.add(neighbor)
+            elif tentative_gscore >= gscore.get(neighbor, float('inf')):
+                continue
+
+            came_from[neighbor] = current
+            gscore[neighbor] = tentative_gscore
+            fscore[neighbor] = gscore[neighbor] + dist(neighbor, end)
+
+    raise Exception('no path found')
 
 def rrt(grid, start, end):
     # TODO implement
@@ -228,21 +266,9 @@ def main(host, port, target_num, algorithm="astar"):
     writer.close()
 
 def run_tests():
-    #robot, target, obstacles = positions(example3, "21")
-    #assert closer_side(robot, target) == "left"
-
-    #robot, target, obstacles = positions(example4, "21")
-    #assert closer_side(robot, target) == "right"
-
-    #for i, ex in enumerate([example1, example2, example3, example4]):
-    #    print("get_command for example{}: {}".format(i + 1,
-    #        get_command(*positions(ex, "21"))))
-    #print("^^Make sure this looks good^^")
     args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
     print("a* with grid_example1:", astar(*args))
     print("rrt with grid_example1:", rrt(*args))
-    print("(should be something like "
-            "[(3,1), (2,2), (1,3), (1,4), (1,5), (1,6), (2,7), (3,8), (4,9)]")
     print()
     robot, target, obstacles = positions(example5, "25")
     print("grid with example5:", get_grid(obstacles))
