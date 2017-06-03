@@ -28,7 +28,7 @@ example5 = {"time": 17880.044430377, "robot": {"corners": [[1251.0, 314.0], [117
 # L-shaped maze. target is 29.
 example6 = {"time": 676.712433488, "53": {"corners": [[1315.0, 380.0], [1302.0, 289.0], [1411.0, 286.0], [1426.0, 375.0]], "orientation": [-0.9993395209312439, 0.036339618265628815], "center": [1363.5, 332.5]}, "29": {"corners": [[1361.0, 235.0], [1257.0, 244.0], [1240.0, 162.0], [1341.0, 153.0]], "orientation": [0.22007830440998077, 0.9754822254180908], "center": [1299.75, 198.5]}, "23": {"corners": [[1169.0, 857.0], [1176.0, 989.0], [1043.0, 990.0], [1040.0, 858.0]], "orientation": [0.9999708533287048, -0.00763336569070816], "center": [1107.0, 923.5]}, "robot": {"corners": [[729.0, 797.0], [873.0, 794.0], [871.0, 942.0], [719.0, 946.0]], "orientation": [0.04037109762430191, -0.9991847276687622], "center": [798.0, 869.75]}, "99": {"corners": [[466.0, 895.0], [480.0, 773.0], [602.0, 767.0], [592.0, 889.0]], "orientation": [-0.9988314509391785, 0.048330552875995636], "center": [535.0, 831.0]}, "37": {"corners": [[1164.0, 794.0], [1039.0, 793.0], [1038.0, 676.0], [1159.0, 676.0]], "orientation": [0.02552359737455845, 0.9996742010116577], "center": [1100.0, 734.75]}, "91": {"corners": [[502.0, 595.0], [615.0, 591.0], [604.0, 700.0], [487.0, 705.0]], "orientation": [0.1178935244679451, -0.9930262565612793], "center": [552.0, 647.75]}, "43": {"corners": [[1030.0, 512.0], [1143.0, 509.0], [1151.0, 614.0], [1035.0, 617.0]], "orientation": [-0.06178648769855499, -0.9980894327163696], "center": [1089.75, 563.0]}, "39": {"corners": [[630.0, 426.0], [616.0, 523.0], [505.0, 523.0], [523.0, 426.0]], "orientation": [1.0, 0.0], "center": [568.5, 474.5]}, "98": {"corners": [[968.0, 338.0], [1074.0, 323.0], [1091.0, 415.0], [982.0, 429.0]], "orientation": [-0.16701945662498474, -0.9859535694122314], "center": [1028.75, 376.25]}, "45": {"corners": [[1154.0, 402.0], [1135.0, 313.0], [1241.0, 299.0], [1263.0, 388.0]], "orientation": [-0.9916261434555054, 0.12914201617240906], "center": [1198.25, 350.5]}, "38": {"corners": [[1572.0, 294.0], [1600.0, 386.0], [1488.0, 394.0], [1464.0, 303.0]], "orientation": [0.9970277547836304, -0.07704305648803711], "center": [1531.0, 344.25]}, "47": {"corners": [[557.0, 279.0], [655.0, 286.0], [632.0, 374.0], [530.0, 366.0]], "orientation": [0.2747211158275604, -0.9615239500999451], "center": [593.5, 326.25]}, "21": {"corners": [[663.0, 226.0], [563.0, 232.0], [571.0, 153.0], [668.0, 147.0]], "orientation": [-0.08200138807296753, 0.9966322183609009], "center": [616.25, 189.5]}, "89": {"corners": [[1409.0, 148.0], [1510.0, 142.0], [1532.0, 223.0], [1427.0, 230.0]], "orientation": [-0.23832756280899048, -0.9711848497390747], "center": [1469.5, 185.75]}, "35": {"corners": [[879.0, 46.0], [880.0, 118.0], [782.0, 123.0], [785.0, 51.0]], "orientation": [0.9986464381217957, -0.05201283469796181], "center": [831.5, 84.5]}, "31": {"corners": [[702.0, 103.0], [609.0, 109.0], [616.0, 37.0], [707.0, 31.0]], "orientation": [-0.08304548263549805, 0.9965457916259766], "center": [658.5, 70.0]}, "97": {"corners": [[1013.0, 30.0], [1034.0, 100.0], [939.0, 119.0], [920.0, 48.0]], "orientation": [0.9811782240867615, -0.19310422241687775], "center": [976.5, 74.25]}, "1": {"corners": [[1369.0, 28.0], [1464.0, 21.0], [1486.0, 94.0], [1388.0, 102.0]], "orientation": [-0.2686575949192047, -0.9632357954978943], "center": [1426.75, 61.25]}, "33": {"corners": [[1185.0, 89.0], [1088.0, 96.0], [1080.0, 23.0], [1174.0, 16.0]], "orientation": [0.12904880940914154, 0.9916382431983948], "center": [1131.75, 56.0]}, "95": {"corners": [[1213.0, 12.0], [1308.0, 6.0], [1324.0, 77.0], [1226.0, 85.0]], "orientation": [-0.19742515683174133, -0.980318009853363], "center": [1267.75, 45.0]}}
 
-# fancy maze:
+# fancy maze. target is 38.
 #  0 1 2 3 4 5 6 7 8 9101112131415161718192021222324
 # 0 - - - - - * - - - - - - - - - - - - - - - - - - -
 # 1 - - * * * * * * * * * * * * * * * * * * * * * * *
@@ -84,10 +84,6 @@ def angle_between(v1, v2):
     v2_u = unit_vector(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
-def normalize(vector, length):
-    magnitude = np.linalg.norm(vector)
-    return (vector * length) / magnitude
-
 def radius(square):
     return np.linalg.norm(np.subtract(square["center"],
         square["corners"][0])) * 2
@@ -100,12 +96,6 @@ def attraction_field(robot, target):
         return (0, 0)
     else:
         return vector
-    #spread = r * 3
-    #if distance > spread:
-    #    return normalize(vector, 1)
-    #elif distance < r:
-    #    return (0, 0)
-    #return normalize(vector, 100)
 
 def closer_side(robot, target, front_side="front"):
     offset = 0 if front_side == "front" else 2
@@ -146,18 +136,11 @@ def get_command(robot, vector):
 
 def positions(data, target_num):
     robot = data.get("robot", None)
-    #if robot is not None:
-    #    r = radius(robot)
-    #    robot["center"][1] -= r
-    #    for i in range(4):
-    #        robot["corners"][i][1] -= r
     target = data.get(target_num, None)
     obstacles = tuple(data[key] for key in data
                       if key not in ('time', 'robot', target_num))
     return robot, target, obstacles
 
-# This function handles all the steps in the project description up until the
-# a*/rrt part.
 def get_grid(obstacles):
     cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
                       for o in obstacles)
@@ -188,7 +171,6 @@ def adjacent_cells(occupied, cell):
     directions = ((x, y) for x in (-1, 0, 1)
                          for y in (-1, 0, 1)
                          if (x, y) != (0, 0))
-    #directions = ((0,1), (0,-1), (1,0), (-1,0))
     neighbors = {tuple(np.add(cell, d)) for d in directions}
     return set.difference(neighbors, occupied)
 
@@ -225,9 +207,6 @@ def astar(grid, start, end):
 
 def rrt(grid, start, end):
     # TODO implement
-    # See grid_example1 for example input, output
-    #lower_corner = [max(c[i] for c in coordinates) for i in (0,1)]
-    #max_x, max_y = [grid_coordinates(x, cell_length) for x in lower_corner]
     path = []
     return path
 
