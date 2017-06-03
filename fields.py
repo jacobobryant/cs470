@@ -210,7 +210,7 @@ def rrt(grid, start, end):
     path = []
     return path
 
-def print_grid(robot, target, obstacles):
+def print_grid(robot, target, obstacles, path=None):
     grid, cell_length = get_grid(obstacles)
     start = grid_coordinates(robot["center"], cell_length)
     end = grid_coordinates(target["center"], cell_length)
@@ -219,16 +219,17 @@ def print_grid(robot, target, obstacles):
     def symbol(coords):
         if coords == start:
             return 'S'
-        elif coords in grid:
-            return '*'
         elif coords == end:
             return 'E'
-        else:
+        elif coords in grid:
+            return '*'
+        elif coords in path:
             return '-'
+        else:
+            return ' '
 
-    print(repr(grid))
     max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
-    print(" " + "".join("{:2d}".format(x) for x in range(max_x + 1)))
+    print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
     for y in range(max_y):
         print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
 
@@ -296,9 +297,17 @@ def run_tests():
     print("rrt with example5:", get_path(robot, target, obstacles, "rrt")[0])
     print()
 
+    print("example6 with a*:")
     robot, target, obstacles = positions(example6, "29")
-    print_grid(robot, target, obstacles)
-    print(get_path(robot, target, obstacles, "astar")[0])
+    path = get_path(robot, target, obstacles, "astar")[0]
+    print_grid(robot, target, obstacles, path)
+    print()
+
+    print("example7 with a*:")
+    robot, target, obstacles = positions(example7, "38")
+    path = get_path(robot, target, obstacles, "astar")[0]
+    print_grid(robot, target, obstacles, path)
+    print()
     
 if __name__ == '__main__':
     from sys import argv
