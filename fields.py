@@ -90,13 +90,13 @@ def radius(square):
 		square["corners"][0])) * 2
 
 def attraction_field(robot, target):
-    vector = np.subtract(target, robot["center"])
-    distance = np.linalg.norm(vector)
-    r = radius(robot)
-    if distance < r:
-        return (0, 0)
-    else:
-        return vector
+	vector = np.subtract(target, robot["center"])
+	distance = np.linalg.norm(vector)
+	r = radius(robot)
+	if distance < r:
+		return (0, 0)
+	else:
+		return vector
 
 def closer_side(robot, target, front_side="front"):
 	offset = 0 if front_side == "front" else 2
@@ -136,11 +136,11 @@ def get_command(robot, vector):
 	return command
 
 def positions(data, target_num):
-    robot = data.get("robot", None)
-    target = data.get(target_num, None)
-    obstacles = tuple(data[key] for key in data
-                      if key not in ('time', 'robot', target_num))
-    return robot, target, obstacles
+	robot = data.get("robot", None)
+	target = data.get(target_num, None)
+	obstacles = tuple(data[key] for key in data
+					  if key not in ('time', 'robot', target_num))
+	return robot, target, obstacles
 
 def get_grid(obstacles):
 	cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
@@ -169,11 +169,11 @@ def reconstruct_path(came_from, current):
 	return total_path
 
 def adjacent_cells(occupied, cell):
-    directions = ((x, y) for x in (-1, 0, 1)
-                         for y in (-1, 0, 1)
-                         if (x, y) != (0, 0))
-    neighbors = {tuple(np.add(cell, d)) for d in directions}
-    return set.difference(neighbors, occupied)
+	directions = ((x, y) for x in (-1, 0, 1)
+						 for y in (-1, 0, 1)
+						 if (x, y) != (0, 0))
+	neighbors = {tuple(np.add(cell, d)) for d in directions}
+	return set.difference(neighbors, occupied)
 
 def astar(grid, start, end):
 	dist = lambda a, b: np.linalg.norm(np.subtract(b, a))
@@ -293,27 +293,27 @@ def rrt(grid, start, end):
 	return path
 
 def print_grid(robot, target, obstacles, path=None):
-    grid, cell_length = get_grid(obstacles)
-    start = grid_coordinates(robot["center"], cell_length)
-    end = grid_coordinates(target["center"], cell_length)
-    squares = set.union(grid, {start, end})
+	grid, cell_length = get_grid(obstacles)
+	start = grid_coordinates(robot["center"], cell_length)
+	end = grid_coordinates(target["center"], cell_length)
+	squares = set.union(grid, {start, end})
 
-    def symbol(coords):
-        if coords == start:
-            return 'S'
-        elif coords == end:
-            return 'E'
-        elif coords in grid:
-            return '*'
-        elif coords in path:
-            return '-'
-        else:
-            return ' '
+	def symbol(coords):
+		if coords == start:
+			return 'S'
+		elif coords == end:
+			return 'E'
+		elif coords in grid:
+			return '*'
+		elif coords in path:
+			return '-'
+		else:
+			return ' '
 
-    max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
-    print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
-    for y in range(max_y):
-        print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
+	max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
+	print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
+	for y in range(max_y):
+		print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
 
 def main(host, port, target_num, algorithm="astar"):
 	loop = asyncio.get_event_loop()
@@ -368,30 +368,29 @@ def main(host, port, target_num, algorithm="astar"):
 	writer.close()
 
 def run_tests():
-    args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
-    print("a* with grid_example1:", astar(*args))
-    print("rrt with grid_example1:", rrt(*args))
-    print()
+	args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
+	print("a* with grid_example1:", astar(*args))
+	print("rrt with grid_example1:", rrt(*args))
+	print()
 
-    robot, target, obstacles = positions(example5, "25")
+	robot, target, obstacles = positions(example5, "25")
 	print("grid with example5:", get_grid(obstacles))
-	print_grid(robot, target, obstacles)
 	print("a* with example5:", get_path(robot, target, obstacles, "astar")[0])
 	print("rrt with example5:", get_path(robot, target, obstacles, "rrt")[0])
 	print()
 
-    print("example6 with a*:")
-    robot, target, obstacles = positions(example6, "29")
-    path = get_path(robot, target, obstacles, "astar")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
+	print("example6 with a*:")
+	robot, target, obstacles = positions(example6, "29")
+	path = get_path(robot, target, obstacles, "astar")[0]
+	print_grid(robot, target, obstacles, path)
+	print()
 
-    print("example7 with a*:")
-    robot, target, obstacles = positions(example7, "38")
-    path = get_path(robot, target, obstacles, "astar")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
-    
+	print("example7 with a*:")
+	robot, target, obstacles = positions(example7, "38")
+	path = get_path(robot, target, obstacles, "astar")[0]
+	print_grid(robot, target, obstacles, path)
+	print()
+	
 if __name__ == '__main__':
 	from sys import argv
 	run_tests()
