@@ -10,13 +10,13 @@ debug = False
 
 # robot is pointed towards the target
 example1 = {"time": 2189617.79221862, "21": {"corners": [[991.0, 478.0], [1009.0, 573.0], [912.0, 591.0], [894.0, 497.0]],
-											 "orientation": [0.9822942018508911, -0.1873447746038437], "center": [951.5, 534.75]},
-		"robot": {"corners": [[973.0, 263.0], [867.0, 288.0], [842.0, 180.0], [949.0, 156.0]], "orientation": [0.22220909595489502, 0.9749990701675415], "center": [907.75, 221.75]}}
+                                             "orientation": [0.9822942018508911, -0.1873447746038437], "center": [951.5, 534.75]},
+        "robot": {"corners": [[973.0, 263.0], [867.0, 288.0], [842.0, 180.0], [949.0, 156.0]], "orientation": [0.22220909595489502, 0.9749990701675415], "center": [907.75, 221.75]}}
 
 # robot is pointed away from the target
 example2 = {"time": 2189691.664889238, "21": {"corners": [[990.0, 478.0], [1009.0, 573.0], [913.0, 592.0], [894.0, 496.0]],
-											  "orientation": [0.9819334149360657, -0.18922674655914307], "center": [951.5, 534.75]},
-		"robot": {"corners": [[902.0, 143.0], [1005.0, 182.0], [966.0, 285.0], [863.0, 245.0]], "orientation": [0.35561609268188477, -0.9346320629119873], "center": [934.0, 213.75]}}
+                                              "orientation": [0.9819334149360657, -0.18922674655914307], "center": [951.5, 534.75]},
+        "robot": {"corners": [[902.0, 143.0], [1005.0, 182.0], [966.0, 285.0], [863.0, 245.0]], "orientation": [0.35561609268188477, -0.9346320629119873], "center": [934.0, 213.75]}}
 
 # target is on left side of robot
 example3 = {"robot": {"corners": [[787.0, 208.0], [756.0, 107.0], [859.0, 75.0], [891.0, 177.0]], "center": [823.25, 141.75], "orientation": [-0.9566738605499268, 0.29116159677505493]}, "21": {"corners": [[932.0, 390.0], [967.0, 478.0], [876.0, 514.0], [842.0, 425.0]], "center": [904.25, 451.75], "orientation": [0.9309388995170593, -0.36517491936683655]}, "time": 2248780.235014935}
@@ -59,8 +59,8 @@ example7 = {"time": 7869.709783838, "41": {"corners": [[923.0, 739.0], [988.0, 7
 # 8
 # 9
 grid_example1 = {"grid": {(3,2), (4,2), (4,3), (5,3), (5,4),
-						  (5,5), (5,6), (4,6), (4,7), (3,7), (9,9)},
-		"start": (0,4), "end": (9,4)}
+                          (5,5), (5,6), (4,6), (4,7), (3,7), (9,9)},
+        "start": (0,4), "end": (9,4)}
 
 # The minimum speed for an individual wheel.
 min_speed = 3
@@ -70,328 +70,328 @@ min_speed = 3
 max_proportion = 3.5
 
 def grid_coordinates(cam_coordinates, cell_length):
-	return tuple(int(x / cell_length) for x in cam_coordinates)
+    return tuple(int(x / cell_length) for x in cam_coordinates)
 
 def cam_coordinates(grid_coordinates, cell_length):
-	return tuple(int(x * cell_length + cell_length/2)
-				 for x in grid_coordinates)
+    return tuple(int(x * cell_length + cell_length/2)
+                 for x in grid_coordinates)
 
 def unit_vector(vector):
-	return vector / np.linalg.norm(vector)
+    return vector / np.linalg.norm(vector)
 
 def angle_between(v1, v2):
-	# always returns a nonnegative angle.
-	v1_u = unit_vector(v1)
-	v2_u = unit_vector(v2)
-	return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+    # always returns a nonnegative angle.
+    v1_u = unit_vector(v1)
+    v2_u = unit_vector(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 def radius(square):
-	return np.linalg.norm(np.subtract(square["center"],
-		square["corners"][0])) * 2
+    return np.linalg.norm(np.subtract(square["center"],
+        square["corners"][0])) * 2
 
 def attraction_field(robot, target):
-	vector = np.subtract(target, robot["center"])
-	distance = np.linalg.norm(vector)
-	r = radius(robot)
-	if distance < r:
-		return (0, 0)
-	else:
-		return vector
+    vector = np.subtract(target, robot["center"])
+    distance = np.linalg.norm(vector)
+    r = radius(robot)
+    if distance < r:
+        return (0, 0)
+    else:
+        return vector
 
 def closer_side(robot, target, front_side="front"):
-	offset = 0 if front_side == "front" else 2
-	distance = lambda corner: np.linalg.norm(np.subtract(
-		target["center"], corner))
-	return "left" if distance(robot["corners"][0+offset]) < distance(
-			robot["corners"][1+offset]) else "right"
+    offset = 0 if front_side == "front" else 2
+    distance = lambda corner: np.linalg.norm(np.subtract(
+        target["center"], corner))
+    return "left" if distance(robot["corners"][0+offset]) < distance(
+            robot["corners"][1+offset]) else "right"
 
 def get_command(robot, vector):
-	angle = angle_between(robot["orientation"], vector)
-	front_side = "front"
-	if angle > math.pi/2:
-		front_side = "back"
-		angle = math.pi - angle
-	target_wrapper = {"center": np.add(robot["center"],
-									   np.multiply(vector, 50))}
-	turn_direction = closer_side(robot, target_wrapper, front_side)
+    angle = angle_between(robot["orientation"], vector)
+    front_side = "front"
+    if angle > math.pi/2:
+        front_side = "back"
+        angle = math.pi - angle
+    target_wrapper = {"center": np.add(robot["center"],
+                                       np.multiply(vector, 50))}
+    turn_direction = closer_side(robot, target_wrapper, front_side)
 
-	if debug:
-		print("vector:", vector)
-		print("orientation:", robot["orientation"])
-		print("angle:", angle)
+    if debug:
+        print("vector:", vector)
+        print("orientation:", robot["orientation"])
+        print("angle:", angle)
 
-	proportion = 1 + (max_proportion - 1) * angle / (math.pi/2)
+    proportion = 1 + (max_proportion - 1) * angle / (math.pi/2)
 
-	inner_wheel_speed = min_speed
-	outer_wheel_speed = min_speed * proportion
-	command = [inner_wheel_speed, outer_wheel_speed]
+    inner_wheel_speed = min_speed
+    outer_wheel_speed = min_speed * proportion
+    command = [inner_wheel_speed, outer_wheel_speed]
 
-	if front_side == "back":
-		command.reverse()
-		command = [x * -1 for x in command]
+    if front_side == "back":
+        command.reverse()
+        command = [x * -1 for x in command]
 
-	if turn_direction == "right":
-		command.reverse()
+    if turn_direction == "right":
+        command.reverse()
 
-	return command
+    return command
 
 def positions(data, target_num):
-	robot = data.get("robot", None)
-	target = data.get(target_num, None)
-	obstacles = tuple(data[key] for key in data
-					  if key not in ('time', 'robot', target_num))
-	return robot, target, obstacles
+    robot = data.get("robot", None)
+    target = data.get(target_num, None)
+    obstacles = tuple(data[key] for key in data
+                      if key not in ('time', 'robot', target_num))
+    return robot, target, obstacles
 
 def get_grid(obstacles):
-	cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
-					  for o in obstacles)
-	corners = tuple(corner for o in obstacles for corner in o["corners"])
-	occupied = {grid_coordinates(corner, cell_length) for corner in corners}
-	return occupied, cell_length
+    cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
+                      for o in obstacles)
+    corners = tuple(corner for o in obstacles for corner in o["corners"])
+    occupied = {grid_coordinates(corner, cell_length) for corner in corners}
+    return occupied, cell_length
 
 def get_path(robot, target, obstacles, algorithm="astar"):
-	# Get the path to follow.
-	# grid will be a set of coordinates for cells that don't have an obstacle.
-	# cell_length is the pixel width of each cell in the grid.
-	# path will be a list of grid coordinates.
-	grid, cell_length = get_grid(obstacles)
-	path = (astar if algorithm == "astar" else rrt)(grid,
-			grid_coordinates(robot["center"], cell_length),
-			grid_coordinates(target["center"], cell_length))
-	return path, cell_length
+    # Get the path to follow.
+    # grid will be a set of coordinates for cells that don't have an obstacle.
+    # cell_length is the pixel width of each cell in the grid.
+    # path will be a list of grid coordinates.
+    grid, cell_length = get_grid(obstacles)
+    path = (astar if algorithm == "astar" else rrt)(grid,
+            grid_coordinates(robot["center"], cell_length),
+            grid_coordinates(target["center"], cell_length))
+    return path, cell_length
 
 def reconstruct_path(came_from, current):
-	total_path = [current]
-	while current in came_from.keys():
-		current = came_from[current]
-		total_path.append(current)
-	total_path.reverse()
-	return total_path
+    total_path = [current]
+    while current in came_from.keys():
+        current = came_from[current]
+        total_path.append(current)
+    total_path.reverse()
+    return total_path
 
 def adjacent_cells(occupied, cell):
-	directions = ((x, y) for x in (-1, 0, 1)
-						 for y in (-1, 0, 1)
-						 if (x, y) != (0, 0))
-	neighbors = {tuple(np.add(cell, d)) for d in directions}
-	return set.difference(neighbors, occupied)
+    directions = ((x, y) for x in (-1, 0, 1)
+                         for y in (-1, 0, 1)
+                         if (x, y) != (0, 0))
+    neighbors = {tuple(np.add(cell, d)) for d in directions}
+    return set.difference(neighbors, occupied)
 
 def astar(grid, start, end):
-	dist = lambda a, b: np.linalg.norm(np.subtract(b, a))
-	closed_set = set()
-	open_set = {start}
-	came_from = {}
-	gscore = {start: 0}
-	fscore = {start: dist(start, end)}
+    dist = lambda a, b: np.linalg.norm(np.subtract(b, a))
+    closed_set = set()
+    open_set = {start}
+    came_from = {}
+    gscore = {start: 0}
+    fscore = {start: dist(start, end)}
 
-	while open_set:
-		current = min(open_set, key=lambda cell: fscore.get(cell, float('inf')))
-		if current == end:
-			return reconstruct_path(came_from, current)[1:]
+    while open_set:
+        current = min(open_set, key=lambda cell: fscore.get(cell, float('inf')))
+        if current == end:
+            return reconstruct_path(came_from, current)[1:]
 
-		open_set.remove(current)
-		closed_set.add(current)
-		for neighbor in adjacent_cells(grid, current):
-			if neighbor in closed_set:
-				continue		
-			tentative_gscore = (gscore.get(current, float('inf')) +
-								dist(current, neighbor))
-			if neighbor not in open_set:
-				open_set.add(neighbor)
-			elif tentative_gscore >= gscore.get(neighbor, float('inf')):
-				continue
+        open_set.remove(current)
+        closed_set.add(current)
+        for neighbor in adjacent_cells(grid, current):
+            if neighbor in closed_set:
+                continue        
+            tentative_gscore = (gscore.get(current, float('inf')) +
+                                dist(current, neighbor))
+            if neighbor not in open_set:
+                open_set.add(neighbor)
+            elif tentative_gscore >= gscore.get(neighbor, float('inf')):
+                continue
 
-			came_from[neighbor] = current
-			gscore[neighbor] = tentative_gscore
-			fscore[neighbor] = gscore[neighbor] + dist(neighbor, end)
+            came_from[neighbor] = current
+            gscore[neighbor] = tentative_gscore
+            fscore[neighbor] = gscore[neighbor] + dist(neighbor, end)
 
-	raise Exception('no path found')
+    raise Exception('no path found')
 
 class Tree(object):
-	def __init__(self):
-		self.vertices = set()
-		self.edges = []
+    def __init__(self):
+        self.vertices = set()
+        self.edges = []
 
 def rand_config(dimensions):
-	x = random.randrange(0, dimensions[0])
-	y = random.randrange(0, dimensions[1])
+    x = random.randrange(0, dimensions[0])
+    y = random.randrange(0, dimensions[1])
 
-	return(x, y)
+    return(x, y)
 
 def distance(coords1, coords2):
-	return math.sqrt((coords2[0] - coords1[0])**2 + (coords2[1] - coords1[1])**2)
+    return math.sqrt((coords2[0] - coords1[0])**2 + (coords2[1] - coords1[1])**2)
 
 def nearest_vertex(coords, tree):
-	toReturn = None
-	smallest_distance = float("inf")
+    toReturn = None
+    smallest_distance = float("inf")
 
-	for vertex in tree.vertices:
-		dist = distance(coords, vertex)
-		if (dist < smallest_distance):
-			toReturn = vertex
-			smallest_distance = dist
+    for vertex in tree.vertices:
+        dist = distance(coords, vertex)
+        if (dist < smallest_distance):
+            toReturn = vertex
+            smallest_distance = dist
 
-	return toReturn
+    return toReturn
 
 def new_config(vertex1, vertex2):
-	x = vertex1[0]
-	y = vertex1[1]
-	if (vertex2[0] > vertex1[0]):
-		x += 1
-	if (vertex2[0] < vertex1[0]):
-		x -= 1
-	if (vertex2[1] > vertex1[1]):
-		y += 1
-	if (vertex2[1] < vertex1[1]):
-		y -= 1
+    x = vertex1[0]
+    y = vertex1[1]
+    if (vertex2[0] > vertex1[0]):
+        x += 1
+    if (vertex2[0] < vertex1[0]):
+        x -= 1
+    if (vertex2[1] > vertex1[1]):
+        y += 1
+    if (vertex2[1] < vertex1[1]):
+        y -= 1
 
-	return(x, y)
+    return(x, y)
 
 def construct_path(start, end, tree):
-	path_finished = False
-	next_coord = end
-	path = []
+    path_finished = False
+    next_coord = end
+    path = []
 
-	while (not path_finished):
-		for edge in tree.edges:
-			if (edge[1] == next_coord):
-				path.insert(0, edge[1])
-				next_coord = edge[0]
+    while (not path_finished):
+        for edge in tree.edges:
+            if (edge[1] == next_coord):
+                path.insert(0, edge[1])
+                next_coord = edge[0]
 
-		if (next_coord == start):
-			path_finished = True
+        if (next_coord == start):
+            path_finished = True
 
-	return path
+    return path
 
 
 def rrt(grid, start, end):
-	# TODO implement
-	# See grid_example1 for example input, output
-	#lower_corner = [max(c[i] for c in coordinates) for i in (0,1)]
-	max_x, max_y = [max(coords[i] for coords in grid) for i in (0,1)]
-	print("Dimensions: " + str(max_x), str(max_y))
+    # TODO implement
+    # See grid_example1 for example input, output
+    #lower_corner = [max(c[i] for c in coordinates) for i in (0,1)]
+    max_x, max_y = [max(coords[i] for coords in grid) for i in (0,1)]
+    print("Dimensions: " + str(max_x), str(max_y))
 
-	G = Tree()
-	G.vertices.add(start)
-	K = max_x * max_y
-	k = 0
+    G = Tree()
+    G.vertices.add(start)
+    K = max_x * max_y
+    k = 0
 
-	while(end not in G.vertices and k < K):
-		qrand = 0
-		if (random.random() <= 0.1):
-			qrand = end
-		else:
-			qrand = rand_config((max_x, max_y))
-		
-		qnear = nearest_vertex(qrand, G)
-		qnew = new_config(qnear, qrand)
-		if (qnew not in grid and qnew not in G.vertices):
-			G.vertices.add(qnew)
-			G.edges.append((qnear, qnew))
-		K += 1
+    while(end not in G.vertices and k < K):
+        qrand = 0
+        if (random.random() <= 0.1):
+            qrand = end
+        else:
+            qrand = rand_config((max_x, max_y))
+        
+        qnear = nearest_vertex(qrand, G)
+        qnew = new_config(qnear, qrand)
+        if (qnew not in grid and qnew not in G.vertices):
+            G.vertices.add(qnew)
+            G.edges.append((qnear, qnew))
+        K += 1
 
-	path = construct_path(start, end, G)
-	return path
+    path = construct_path(start, end, G)
+    return path
 
 def print_grid(robot, target, obstacles, path=None):
-	grid, cell_length = get_grid(obstacles)
-	start = grid_coordinates(robot["center"], cell_length)
-	end = grid_coordinates(target["center"], cell_length)
-	squares = set.union(grid, {start, end})
+    grid, cell_length = get_grid(obstacles)
+    start = grid_coordinates(robot["center"], cell_length)
+    end = grid_coordinates(target["center"], cell_length)
+    squares = set.union(grid, {start, end})
 
-	def symbol(coords):
-		if coords == start:
-			return 'S'
-		elif coords == end:
-			return 'E'
-		elif coords in grid:
-			return '*'
-		elif coords in path:
-			return '-'
-		else:
-			return ' '
+    def symbol(coords):
+        if coords == start:
+            return 'S'
+        elif coords == end:
+            return 'E'
+        elif coords in grid:
+            return '*'
+        elif coords in path:
+            return '-'
+        else:
+            return ' '
 
-	max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
-	print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
-	for y in range(max_y):
-		print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
+    max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
+    print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
+    for y in range(max_y):
+        print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
 
 def main(host, port, target_num, algorithm="astar"):
-	loop = asyncio.get_event_loop()
-	reader, writer = loop.run_until_complete(
-		asyncio.open_connection(host, port))
-	print(reader.readline())
+    loop = asyncio.get_event_loop()
+    reader, writer = loop.run_until_complete(
+        asyncio.open_connection(host, port))
+    print(reader.readline())
 
-	def do(command):
-		print('>>>', command)
-		writer.write(command.strip().encode())
-		res = loop.run_until_complete(reader.readline()).decode().strip()
-		print('<<<', res)
-		print()
-		return res
+    def do(command):
+        print('>>>', command)
+        writer.write(command.strip().encode())
+        res = loop.run_until_complete(reader.readline()).decode().strip()
+        print('<<<', res)
+        print()
+        return res
 
-	def get_positions():
-		while True:
-			try:
-				data = json.loads(do('where'))
-				if "robot" in data:
-					return positions(data, target_num)
-			except json.decoder.JSONDecodeError:
-				pass
-			print("server returned bad response")
-			sleep(0.1)
+    def get_positions():
+        while True:
+            try:
+                data = json.loads(do('where'))
+                if "robot" in data:
+                    return positions(data, target_num)
+            except json.decoder.JSONDecodeError:
+                pass
+            print("server returned bad response")
+            sleep(0.1)
 
-	robot, target, obstacles = get_positions()
-	if target == None:
-		raise Exception("Can't see target (#{})".format(target_num))
-	print_grid(robot, target, obstacles)
-	input("Press Enter to start")
-	path, cell_length = get_path(robot, target, obstacles, algorithm)
-	while path:
-		target = cam_coordinates(path[0], cell_length)
-		vector = attraction_field(robot, target)
-		if not any(vector):
-			path.pop(0)
-			continue
+    robot, target, obstacles = get_positions()
+    if target == None:
+        raise Exception("Can't see target (#{})".format(target_num))
+    print_grid(robot, target, obstacles)
+    input("Press Enter to start")
+    path, cell_length = get_path(robot, target, obstacles, algorithm)
+    while path:
+        target = cam_coordinates(path[0], cell_length)
+        vector = attraction_field(robot, target)
+        if not any(vector):
+            path.pop(0)
+            continue
 
-		arg_list = map(lambda x: int(round(x)), get_command(robot, vector))
+        arg_list = map(lambda x: int(round(x)), get_command(robot, vector))
 
-		if debug:
-			print("command:", list(arg_list))
-			print()
-			input("press Enter")
-		else:
-			do("speed " + " ".join(str(arg) for arg in arg_list))
-			sleep(0.1)
-		robot, _, _ = get_positions()
+        if debug:
+            print("command:", list(arg_list))
+            print()
+            input("press Enter")
+        else:
+            do("speed " + " ".join(str(arg) for arg in arg_list))
+            sleep(0.1)
+        robot, _, _ = get_positions()
 
-	do("power 0 0")
-	writer.close()
+    do("power 0 0")
+    writer.close()
 
 def run_tests():
-	args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
-	print("a* with grid_example1:", astar(*args))
-	print("rrt with grid_example1:", rrt(*args))
-	print()
+    args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
+    print("a* with grid_example1:", astar(*args))
+    print("rrt with grid_example1:", rrt(*args))
+    print()
 
-	robot, target, obstacles = positions(example5, "25")
-	print("grid with example5:", get_grid(obstacles))
-	print("a* with example5:", get_path(robot, target, obstacles, "astar")[0])
-	print("rrt with example5:", get_path(robot, target, obstacles, "rrt")[0])
-	print()
+    robot, target, obstacles = positions(example5, "25")
+    print("grid with example5:", get_grid(obstacles))
+    print("a* with example5:", get_path(robot, target, obstacles, "astar")[0])
+    print("rrt with example5:", get_path(robot, target, obstacles, "rrt")[0])
+    print()
 
-	print("example6 with a*:")
-	robot, target, obstacles = positions(example6, "29")
-	path = get_path(robot, target, obstacles, "astar")[0]
-	print_grid(robot, target, obstacles, path)
-	print()
+    print("example6 with a*:")
+    robot, target, obstacles = positions(example6, "29")
+    path = get_path(robot, target, obstacles, "astar")[0]
+    print_grid(robot, target, obstacles, path)
+    print()
 
-	print("example7 with a*:")
-	robot, target, obstacles = positions(example7, "38")
-	path = get_path(robot, target, obstacles, "astar")[0]
-	print_grid(robot, target, obstacles, path)
-	print()
-	
+    print("example7 with a*:")
+    robot, target, obstacles = positions(example7, "38")
+    path = get_path(robot, target, obstacles, "astar")[0]
+    print_grid(robot, target, obstacles, path)
+    print()
+    
 if __name__ == '__main__':
-	from sys import argv
-	run_tests()
-	#main(*argv[1:])
+    from sys import argv
+    run_tests()
+    #main(*argv[1:])
