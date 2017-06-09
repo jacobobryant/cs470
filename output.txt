@@ -1,0 +1,107 @@
+search 0 $ python pos.py
+99%
+
+BEST:
+The most troublesome report may be the August merchandise trade deficit due out tomorrow .
+    actual: DT RBS JJ NN MD VB DT NNP NN NN NN JJ IN NN .
+prediction: DT RBS JJ NN MD VB DT NNP NN NN NN JJ IN NN .
+     score: 1.0
+
+`` There 's a possibility of a surprise '' in the trade report , said Michael Englund , director of research at MMS .
+    actual: `` EX VBZ DT NN IN DT NN '' IN DT NN NN , VBD NNP NNP , NN IN NN IN NNP .
+prediction: `` EX VBZ DT NN IN DT NN '' IN DT NN NN , VBD NNP NNP , NN IN NN IN NNP .
+     score: 1.0
+
+A widening of the deficit , if it were combined with a stubbornly strong dollar , would exacerbate trade problems -- but the dollar weakened Friday as stocks plummeted .
+    actual: DT NN IN DT NN , IN PRP VBD VBN IN DT RB JJ NN , MD VB NN NNS : CC DT NN VBD NNP IN NNS VBD .
+prediction: DT NN IN DT NN , IN PRP VBD VBN IN DT RB JJ NN , MD VB NN NNS : CC DT NN VBD NNP IN NNS VBD .
+     score: 1.0
+
+In any event , Mr. Englund and many others say that the easy gains in narrowing the trade gap have already been made .
+    actual: IN DT NN , NNP NNP CC JJ NNS VBP IN DT JJ NNS IN VBG DT NN NN VBP RB VBN VBN .
+prediction: IN DT NN , NNP NNP CC JJ NNS VBP IN DT JJ NNS IN VBG DT NN NN VBP RB VBN VBN .
+     score: 1.0
+
+Exports are thought to have risen strongly in August , but probably not enough to offset the jump in imports , economists said .
+    actual: NNS VBP VBN TO VB VBN RB IN NNP , CC RB RB RB TO VB DT NN IN NNS , NNS VBD .
+prediction: NNS VBP VBN TO VB VBN RB IN NNP , CC RB RB RB TO VB DT NN IN NNS , NNS VBD .
+     score: 1.0
+
+A rebound in energy prices , which helped push up the producer price index , is expected to do the same in the consumer price report .
+    actual: DT NN IN NN NNS , WDT VBD VB RP DT NN NN NN , VBZ VBN TO VB DT JJ IN DT NN NN NN .
+prediction: DT NN IN NN NNS , WDT VBD VB RP DT NN NN NN , VBZ VBN TO VB DT JJ IN DT NN NN NN .
+     score: 1.0
+
+The consensus view expects a 0.4 % increase in the September CPI after a flat reading in August .
+    actual: DT NN NN VBZ DT CD NN NN IN DT NNP NNP IN DT JJ NN IN NNP .
+prediction: DT NN NN VBZ DT CD NN NN IN DT NNP NNP IN DT JJ NN IN NNP .
+     score: 1.0
+
+Robert H. Chandross , an economist for Lloyd 's Bank in New York , is among those expecting a more moderate gain in the CPI than in prices at the producer level .
+    actual: NNP NNP NNP , DT NN IN NNP POS NNP IN NNP NNP , VBZ IN DT VBG DT RBR JJ NN IN DT NNP IN IN NNS IN DT NN NN .
+prediction: NNP NNP NNP , DT NN IN NNP POS NNP IN NNP NNP , VBZ IN DT VBG DT RBR JJ NN IN DT NNP IN IN NNS IN DT NN NN .
+     score: 1.0
+
+`` Auto prices had a big effect in the PPI , and at the CPI level they wo n't , '' he said .
+    actual: `` NN NNS VBD DT JJ NN IN DT NNP , CC IN DT NNP NN PRP MD RB , '' PRP VBD .
+prediction: `` NN NNS VBD DT JJ NN IN DT NNP , CC IN DT NNP NN PRP MD RB , '' PRP VBD .
+     score: 1.0
+
+Assuming the stock market does n't crash again and completely discredit yuppies and trading rooms , American television audiences in a few months may be seeing Britain 's concept of both .
+    actual: VBG DT NN NN VBZ RB VB RB CC RB VB NNS CC NN NNS , JJ NN NNS IN DT JJ NNS MD VB VBG NNP POS NN IN DT .
+prediction: VBG DT NN NN VBZ RB VB RB CC RB VB NNS CC NN NNS , JJ NN NNS IN DT JJ NNS MD VB VBG NNP POS NN IN DT .
+     score: 1.0
+
+
+WORST:
+Two-Way Street
+    actual: NNP NNP
+prediction: JJR JJR
+     score: 0.0
+
+Candid Comment
+    actual: NNP NNP
+prediction: JJ NN
+     score: 0.0
+
+Turned loose in Shane Longman 's trading room , the yuppie dealers do little right .
+    actual: VBN RB IN NNP NNP POS NN NN , DT NN NNS VBP RB RB .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Surprisingly , Shane Longman survives the week , only to have a senior executive innocently bumble his way into becoming the target of a criminal insider trading investigation .
+    actual: RB , NNP NNP VBZ DT NN , RB TO VB DT JJ NN RB VB PRP$ NN IN VBG DT NN IN DT JJ NN NN NN .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Yuppily enough , he lives in a lavishly furnished converted church , wears designer clothes and drives an antique car .
+    actual: RB RB , PRP VBZ IN DT RB VBN VBN NN , VBZ NN NNS CC VBZ DT JJ NN .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Thames 's U.S. marketing agent , Donald Taffner , is preparing to do just that .
+    actual: NNP POS NNP NN NN , NNP NNP , VBZ VBG TO VB RB DT .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Joanna Kanska looks like a young Zsa Zsa Gabor ; William Armstrong , who plays Max , could pass for Hans Conreid , and Douglas Hodge -LRB- Declan -RRB- for James Farentino ; Rolf Saxon is a passable Tommy Noonan and Dorian Healy could easily double for Huntz Hall , the blank-faced foil of the Bowery Boys comedies .
+    actual: NNP NNP VBZ IN DT JJ NNP NNP NNP : NNP NNP , WP VBZ NNP , MD VB IN NNP NNP , CC NNP NNP -LRB- NNP -RRB- IN NNP NNP : NNP NNP VBZ DT JJ NNP NNP CC NNP NNP MD RB VB IN NNP NNP , DT JJ NN IN DT NNP NNPS NNS .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Dismal sales at General Motors Corp. dragged the U.S. car and truck market down below year-ago levels in early October , the first sales period of the 1990 model year .
+    actual: JJ NNS IN NNP NNPS NNP VBD DT NNP NN CC NN NN IN IN JJ NNS IN JJ NNP , DT JJ NNS NN IN DT CD NN NN .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Domestically built truck sales were down 10.4 % to 86,555 pickups , vans and sport utility vehicles .
+    actual: RB VBN NN NNS VBD IN CD NN TO CD NNS , NNS CC NN NN NNS .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+Newsstands are packed with a colorful array of magazines .
+    actual: NNS VBP VBN IN DT JJ NN IN NNS .
+prediction: JJR JJR JJR JJR JJR JJR JJR JJR JJR JJR
+     score: 0.0
+
+total accuracy: 0.6746720238638785
