@@ -1,63 +1,6 @@
-tested using the entire testing dataset.
+These were randomly sampled from the results that had scores under 95%.
 ===
 
-BEST:
-The most troublesome report may be the August merchandise trade deficit due out tomorrow .
-    actual: DT RBS JJ NN MD VB DT NNP NN NN NN JJ IN NN .
-prediction: DT RBS JJ NN MD VB DT NNP NN NN NN JJ IN NN .
-     score: 1.0
-
-`` There 's a possibility of a surprise '' in the trade report , said Michael Englund , director of research at MMS .
-    actual: `` EX VBZ DT NN IN DT NN '' IN DT NN NN , VBD NNP NNP , NN IN NN IN NNP .
-prediction: `` EX VBZ DT NN IN DT NN '' IN DT NN NN , VBD NNP NNP , NN IN NN IN NNP .
-     score: 1.0
-
-A widening of the deficit , if it were combined with a stubbornly strong dollar , would exacerbate trade problems -- but the dollar weakened Friday as stocks plummeted .
-    actual: DT NN IN DT NN , IN PRP VBD VBN IN DT RB JJ NN , MD VB NN NNS : CC DT NN VBD NNP IN NNS VBD .
-prediction: DT NN IN DT NN , IN PRP VBD VBN IN DT RB JJ NN , MD VB NN NNS : CC DT NN VBD NNP IN NNS VBD .
-     score: 1.0
-
-In any event , Mr. Englund and many others say that the easy gains in narrowing the trade gap have already been made .
-    actual: IN DT NN , NNP NNP CC JJ NNS VBP IN DT JJ NNS IN VBG DT NN NN VBP RB VBN VBN .
-prediction: IN DT NN , NNP NNP CC JJ NNS VBP IN DT JJ NNS IN VBG DT NN NN VBP RB VBN VBN .
-     score: 1.0
-
-Exports are thought to have risen strongly in August , but probably not enough to offset the jump in imports , economists said .
-    actual: NNS VBP VBN TO VB VBN RB IN NNP , CC RB RB RB TO VB DT NN IN NNS , NNS VBD .
-prediction: NNS VBP VBN TO VB VBN RB IN NNP , CC RB RB RB TO VB DT NN IN NNS , NNS VBD .
-     score: 1.0
-
-A rebound in energy prices , which helped push up the producer price index , is expected to do the same in the consumer price report .
-    actual: DT NN IN NN NNS , WDT VBD VB RP DT NN NN NN , VBZ VBN TO VB DT JJ IN DT NN NN NN .
-prediction: DT NN IN NN NNS , WDT VBD VB RP DT NN NN NN , VBZ VBN TO VB DT JJ IN DT NN NN NN .
-     score: 1.0
-
-The consensus view expects a 0.4 % increase in the September CPI after a flat reading in August .
-    actual: DT NN NN VBZ DT CD NN NN IN DT NNP NNP IN DT JJ NN IN NNP .
-prediction: DT NN NN VBZ DT CD NN NN IN DT NNP NNP IN DT JJ NN IN NNP .
-     score: 1.0
-
-Robert H. Chandross , an economist for Lloyd 's Bank in New York , is among those expecting a more moderate gain in the CPI than in prices at the producer level .
-    actual: NNP NNP NNP , DT NN IN NNP POS NNP IN NNP NNP , VBZ IN DT VBG DT RBR JJ NN IN DT NNP IN IN NNS IN DT NN NN .
-prediction: NNP NNP NNP , DT NN IN NNP POS NNP IN NNP NNP , VBZ IN DT VBG DT RBR JJ NN IN DT NNP IN IN NNS IN DT NN NN .
-     score: 1.0
-
-`` Auto prices had a big effect in the PPI , and at the CPI level they wo n't , '' he said .
-    actual: `` NN NNS VBD DT JJ NN IN DT NNP , CC IN DT NNP NN PRP MD RB , '' PRP VBD .
-prediction: `` NN NNS VBD DT JJ NN IN DT NNP , CC IN DT NNP NN PRP MD RB , '' PRP VBD .
-     score: 1.0
-
-Assuming the stock market does n't crash again and completely discredit yuppies and trading rooms , American television audiences in a few months may be seeing Britain 's concept of both .
-    actual: VBG DT NN NN VBZ RB VB RB CC RB VB NNS CC NN NNS , JJ NN NNS IN DT JJ NNS MD VB VBG NNP POS NN IN DT .
-prediction: VBG DT NN NN VBZ RB VB RB CC RB VB NNS CC NN NNS , JJ NN NNS IN DT JJ NNS MD VB VBG NNP POS NN IN DT .
-     score: 1.0
-
-
-
-
-
-
-WORST:
 The cost to taxpayers of Lincoln 's collapse has been estimated at as much as $ 2.5 billion .
     actual: DT NN TO NNS IN NNP POS NN VBZ VBN VBN IN RB JJ IN $ CD CD .
 prediction: DT NN TO NNS IN NNP POS NN VBZ VBN VBN IN RB RB IN $ CD CD .
@@ -158,4 +101,103 @@ Arguing that the separate financial marketplaces acted as one , and concluding t
 prediction: , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , , ,
      score: 0.06779661016949153
 
-total accuracy: 0.6905609837762152
+And it takes Declan , the obligatory ladies ' man of the cast , until the third episode to get past first base with any of his prey .
+    actual: CC PRP VBZ NNP , DT JJ NNS POS NN IN DT NN , IN DT JJ NN TO VB IN JJ NN IN DT IN PRP$ NN .
+prediction: CC PRP VBZ : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.10344827586206896
+
+Perhaps without realizing it , Mr. Taffner simultaneously has put his finger on the problem and an ideal solution : `` Capital City '' should have been a comedy , a worthy sequel to the screwball British `` Carry On '' movies of the 1960s .
+    actual: RB IN VBG PRP , NNP NNP RB VBZ VBN PRP$ NN IN DT NN CC DT JJ NN : `` NNP NNP '' MD VB VBN DT NN , DT JJ NN TO DT JJ JJ `` NNP NNP '' NNS IN DT CD .
+prediction: RB IN VBG PRP , NNP : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.15217391304347827
+
+Instead of closing ranks to protect the firm 's reputation , the executive 's internal rivals , led by a loutish American , demand his resignation .
+    actual: RB IN VBG NNS TO VB DT NN POS NN , DT NN POS JJ NNS , VBN IN DT JJ NNP , VBP PRP$ NN .
+prediction: RB IN VBG NNS TO VB DT NN POS NN , DT NN POS JJ NNS , VBN IN DT : : : : : : :
+     score: 0.7407407407407407
+
+-- Rollin S. Trexler .
+    actual: : NNP NNP NNP .
+prediction: : : : : :
+     score: 0.2
+
+Little chance that Shane Longman is going to recoup today .
+    actual: JJ NN IN NNP NNP VBZ VBG TO VB NN .
+prediction: JJ NN IN NNP : : : : : : :
+     score: 0.36363636363636365
+
+Joanna Kanska looks like a young Zsa Zsa Gabor ; William Armstrong , who plays Max , could pass for Hans Conreid , and Douglas Hodge -LRB- Declan -RRB- for James Farentino ; Rolf Saxon is a passable Tommy Noonan and Dorian Healy could easily double for Huntz Hall , the blank-faced foil of the Bowery Boys comedies .
+    actual: NNP NNP VBZ IN DT JJ NNP NNP NNP : NNP NNP , WP VBZ NNP , MD VB IN NNP NNP , CC NNP NNP -LRB- NNP -RRB- IN NNP NNP : NNP NNP VBZ DT JJ NNP NNP CC NNP NNP MD RB VB IN NNP NNP , DT JJ NN IN DT NNP NNPS NNS .
+prediction: : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.03389830508474576
+
+The plot is thwarted when the firm 's major stockholder , kelp farming on the other side of the globe , hurries home to support the executive .
+    actual: DT NN VBZ VBN WRB DT NN POS JJ NN , NN NN IN DT JJ NN IN DT NN , VBZ RB TO VB DT NN .
+prediction: DT NN VBZ VBN WRB DT NN POS JJ NN , : : : : : : : : : : : : : : : : :
+     score: 0.39285714285714285
+
+That dividend is almost double the 35 % currently taken out of Farmers by B.A.T , the spokesman added .
+    actual: DT NN VBZ RB RB DT CD NN RB VBN IN IN NNPS IN NNP , DT NN VBD .
+prediction: DT NN VBZ RB VB DT CD NN RB VBN RP IN NNP IN NNP , DT NN VBD .
+     score: 0.85
+
+In producing and promoting `` Capital City , '' Thames has spent about as much as Shane Longman loses on a good day .
+    actual: IN VBG CC VBG `` NNP NNP , '' NNP VBZ VBN IN RB JJ IN NNP NNP VBZ IN DT JJ NN .
+prediction: IN VBG CC VBG `` NNP NNP , '' : : : : : : : : : : : : : : :
+     score: 0.375
+
+So , OK kids , everybody on stage for `` Carry On Trading '' : The cast is frantically searching the office for misplaced Japanese bonds that suddenly have soared in value because Dai-Ichi Kangyo Bank has just bought the White House .
+    actual: RB , UH NNS , NN IN NN IN `` NNP NNP NNP '' : DT NN VBZ RB VBG DT NN IN VBN JJ NNS WDT RB VBP VBN IN NN IN NNP NNP NNP VBZ RB VBN DT NNP NNP .
+prediction: RB , JJ NNS , NN IN NN IN `` : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.23255813953488372
+
+Yuppily enough , he lives in a lavishly furnished converted church , wears designer clothes and drives an antique car .
+    actual: RB RB , PRP VBZ IN DT RB VBN VBN NN , VBZ NN NNS CC VBZ DT JJ NN .
+prediction: : : : : : : : : : : : : : : : : : : : : :
+     score: 0.0
+
+Perhaps the explanation for these anomalies is that class-conscious Britain is n't ready to come to terms with the wealth created by the Thatcherian free-enterprise regime .
+    actual: RB DT NN IN DT NNS VBZ IN JJ NNP VBZ RB JJ TO VB TO NNS IN DT NN VBN IN DT JJ NN NN .
+prediction: RB DT NN IN DT : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.18518518518518517
+
+The trade figures turn out well , and all those recently unloaded bonds spurt in price .
+    actual: DT NN NNS VBP RP RB , CC PDT DT RB VBN NNS VBP IN NN .
+prediction: DT NN NNS VBP RP RB , CC PDT DT RB JJ NNS NN IN NN .
+     score: 0.8823529411764706
+
+He is discreetly hopeful , citing three U.S. comedy series -- `` Three 's Company , '' `` Too Close for Comfort '' and `` Check It Out '' -- that had British antecedents .
+    actual: PRP VBZ RB JJ , VBG CD NNP NN NN : `` NNP POS NNP , '' `` NNP NNP IN NNP '' CC `` NNP NNP NNP '' : WDT VBD JJ NNS .
+prediction: PRP VBZ : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.11428571428571428
+
+Turned loose in Shane Longman 's trading room , the yuppie dealers do little right .
+    actual: VBN RB IN NNP NNP POS NN NN , DT NN NNS VBP RB RB .
+prediction: : : : : : : : : : : : : : : : :
+     score: 0.0
+
+According to the program 's publicity prospectus , `` Capital City , '' set at Shane Longman , a fictional mid-sized securities firm with # 500 million capital , `` follows the fortunes of a close-knit team of young , high-flying dealers , hired for their particular blend of style , genius and energy .
+    actual: VBG TO DT NN POS NN NN , `` NNP NNP , '' VBN IN NNP NNP , DT JJ JJ NNS JJ IN # CD CD NN , `` VBZ DT NNS IN DT JJ NN IN JJ , JJ NNS , VBN IN PRP$ JJ NN IN NN , NN CC NN .
+prediction: VBG TO DT NN POS NN NN , `` NNP NNP , '' VBD IN NNP : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.2727272727272727
+
+The amended filings also point out that under a new agreement , Hoylake has an absolute obligation to sell Farmers to Axa upon an acquisition of B.A.T .
+    actual: DT VBN NNS RB VBP RP DT IN DT JJ NN , NNP VBZ DT JJ NN TO VB NNPS TO NNP IN DT NN IN NNP .
+prediction: DT VBN NNS RB VB RP IN IN DT JJ NN , NNP VBZ DT JJ NN TO VB NNS TO NNP IN DT NN IN NNP .
+     score: 0.8928571428571429
+
+Let 's make that 1929 , just to be sure .
+    actual: VB PRP VB DT CD , RB TO VB JJ .
+prediction: VB PRP VBP IN CD , RB TO VB JJ .
+     score: 0.8181818181818182
+
+Another half million quid went for a volley of full-page advertisements in six major British newspapers and for huge posters in the London subway .
+    actual: DT DT CD NN VBD IN DT NN IN JJ NNS IN CD JJ JJ NNS CC IN JJ NNS IN DT JJ NN .
+prediction: DT NN CD : : : : : : : : : : : : : : : : : : : : : :
+     score: 0.08
+
+-- C.E. Friedman .
+    actual: : NNP NNP .
+prediction: : : : :
+     score: 0.25
+

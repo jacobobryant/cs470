@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
 from collections import namedtuple
 from fractions import Fraction as frac
-from heapq import nlargest, nsmallest
+from heapq import nlargest
+import random
 
 def viterbi(obs, states, start_p, trans_p, emit_p):
     V = [{}]
@@ -17,8 +18,6 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
                     max_prob = max_tr_prob * emit_p[st].get(obs[t], 0)
                     V[t][st] = {"prob": max_prob, "prev": prev_st}
                     break
-    #for line in dptable(V):
-    #    print(line)
     opt = []
     # The highest probability
     max_prob = max(value["prob"] for value in V[-1].values())
@@ -35,13 +34,6 @@ def viterbi(obs, states, start_p, trans_p, emit_p):
         previous = V[t + 1][previous]["prev"]
 
     return opt
-    #print('The steps of states are ' + ' '.join(opt) + ' with highest probability of %s' % max_prob)
-
-def dptable(V):
-    # Print a table of steps from dictionary
-    yield " ".join(("%12d" % i) for i in range(len(V)))
-    for state in V[0]:
-        yield "%.7s: " % state + " ".join("%.7s" % ("%f" % v[state]["prob"]) for v in V)
 
 def read_sentences(filename):
     Word = namedtuple('Word', 'word pos')
@@ -121,8 +113,9 @@ def main(training_file, testing_file):
         print_result(r)
 
     print("\nWORST:")
-    worst = nsmallest(10, results, key=lambda r: r.score)
-    for r in worst:
+    worst = [r for r in results if r.score < 0.90]
+    random.shuffle(worst)
+    for r in worst[:20]:
         print_result(r)
 
     print("total accuracy:", total_hits / (total_hits + total_misses))
