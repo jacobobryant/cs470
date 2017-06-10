@@ -40,13 +40,27 @@ def read_sentences(filename):
 
     with open(filename, 'r') as f:
         return [[Word(*word.rsplit('_', 1)) for word in sentence.split()]
-                for sentence in f.read().splitlines()]
+                for sentence in f.read().lower().splitlines()]
 
 def print_result(r):
     print(' '.join(word.word for word in r.test_data))
     print("    actual: " + ' '.join(word.pos for word in r.test_data))
     print("prediction: " + ' '.join(pos for pos in r.predictions))
     print("     score: {}".format(r.score))
+    print()
+
+def print_analysis(transitions, emissions):
+    print("\nTRANSITIONS")
+    for pos in transitions:
+        most_likely  = max(transitions[pos], key=lambda key: transitions[pos][key])
+        least_likely = min(transitions[pos], key=lambda key: transitions[pos][key])
+        print("{}: {}, {}".format(pos, most_likely, least_likely))
+
+    print("\nEMISSIONS")
+    for pos in emissions:
+        most_likely =  max(emissions[pos], key=lambda key: emissions[pos][key])
+        least_likely = min(emissions[pos], key=lambda key: emissions[pos][key])
+        print("{}: {}, {}".format(pos, most_likely, least_likely))
     print()
 
 def main(training_file, testing_file):
@@ -78,6 +92,8 @@ def main(training_file, testing_file):
             total = sum(structure[key1][key2] for key2 in structure[key1])
             for key2 in structure[key1]:
                 structure[key1][key2] = frac(structure[key1][key2], total)
+
+    print_analysis(transitions, emissions)
     
     states = set(emissions.keys())
     start_p = {state: frac(1, len(states)) for state in states}
@@ -88,6 +104,7 @@ def main(training_file, testing_file):
     results = []
     Result = namedtuple("Result", "test_data predictions score")
 
+    # get results from viterbi
     for i, sentence in enumerate(test_sentences):
         print("\r{}%".format((i*100) // len(test_sentences)), end="")
 
