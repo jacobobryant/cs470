@@ -141,6 +141,18 @@ def get_grid(obstacles):
     occupied = {grid_coordinates(corner, cell_length) for corner in corners}
     return occupied, cell_length
 
+def transition_probabilities(coordinates, action):
+    # input: coordinates=(0, 0), action=pi/2 (up)
+    # e.g. {(0, 1): ...
+    #       (-1, 1):
+    #       (1, 1): ... 
+    #       (1, 0):
+    #       (-1, 0):
+    pass
+
+def policy_evaluation(policy, utility, grid, target):
+    pass
+
 def policy_iteration(grid, target):
     # TODO implement
     pass
@@ -237,7 +249,6 @@ def main(args):
             print("couldn't read calibration data")
             transform = lambda x: None
 
-        # get path
         robot, target, obstacles = get_positions()
         transform(robot)
         if target == None:
