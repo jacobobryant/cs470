@@ -89,15 +89,6 @@ def radius(square):
     return np.linalg.norm(np.subtract(square["center"],
         square["corners"][0])) * 2
 
-def attraction_field(robot, target):
-    vector = np.subtract(target, robot["center"])
-    distance = np.linalg.norm(vector)
-    r = radius(robot)
-    if distance < r:
-        return (0, 0)
-    else:
-        return vector
-
 def closer_side(robot, target, front_side="front"):
     offset = 0 if front_side == "front" else 2
     distance = lambda corner: np.linalg.norm(np.subtract(
@@ -143,154 +134,16 @@ def positions(data, target_num):
     return robot, target, obstacles
 
 def get_grid(obstacles):
+    # TODO make the grid more fine-grained
     cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
                       for o in obstacles)
     corners = tuple(corner for o in obstacles for corner in o["corners"])
     occupied = {grid_coordinates(corner, cell_length) for corner in corners}
     return occupied, cell_length
 
-def get_path(robot, target, obstacles, algorithm="astar"):
-    # Get the path to follow.
-    # grid will be a set of coordinates for cells that don't have an obstacle.
-    # cell_length is the pixel width of each cell in the grid.
-    # path will be a list of grid coordinates.
-    grid, cell_length = get_grid(obstacles)
-    path = (astar if algorithm == "astar" else rrt)(grid,
-            grid_coordinates(robot["center"], cell_length),
-            grid_coordinates(target["center"], cell_length))
-    return path, cell_length
-
-def reconstruct_path(came_from, current):
-    total_path = [current]
-    while current in came_from.keys():
-        current = came_from[current]
-        total_path.append(current)
-    total_path.reverse()
-    return total_path
-
-def adjacent_cells(occupied, cell):
-    directions = ((x, y) for x in (-1, 0, 1)
-                         for y in (-1, 0, 1)
-                         if (x, y) != (0, 0))
-    neighbors = {tuple(np.add(cell, d)) for d in directions}
-    return set.difference(neighbors, occupied)
-
-def astar(grid, start, end):
-    dist = lambda a, b: np.linalg.norm(np.subtract(b, a))
-    closed_set = set()
-    open_set = {start}
-    came_from = {}
-    gscore = {start: 0}
-    fscore = {start: dist(start, end)}
-
-    while open_set:
-        current = min(open_set, key=lambda cell: fscore.get(cell, float('inf')))
-        if current == end:
-            return reconstruct_path(came_from, current)[1:]
-
-        open_set.remove(current)
-        closed_set.add(current)
-        for neighbor in adjacent_cells(grid, current):
-            if neighbor in closed_set:
-                continue
-            tentative_gscore = (gscore.get(current, float('inf')) +
-                                dist(current, neighbor))
-            if neighbor not in open_set:
-                open_set.add(neighbor)
-            elif tentative_gscore >= gscore.get(neighbor, float('inf')):
-                continue
-
-            came_from[neighbor] = current
-            gscore[neighbor] = tentative_gscore
-            fscore[neighbor] = gscore[neighbor] + dist(neighbor, end)
-
-    raise Exception('no path found')
-
-class Tree(object):
-    def __init__(self):
-        self.vertices = set()
-        self.edges = []
-
-def rand_config(dimensions):
-    x = random.randrange(0, dimensions[0])
-    y = random.randrange(0, dimensions[1])
-
-    return(x, y)
-
-def distance(coords1, coords2):
-    return math.sqrt((coords2[0] - coords1[0])**2 + (coords2[1] - coords1[1])**2)
-
-def nearest_vertex(coords, tree):
-    toReturn = None
-    smallest_distance = float("inf")
-
-    for vertex in tree.vertices:
-        dist = distance(coords, vertex)
-        if (dist < smallest_distance):
-            toReturn = vertex
-            smallest_distance = dist
-
-    return toReturn
-
-def new_config(vertex1, vertex2):
-    x = vertex1[0]
-    y = vertex1[1]
-    if (vertex2[0] > vertex1[0]):
-        x += 1
-    if (vertex2[0] < vertex1[0]):
-        x -= 1
-    if (vertex2[1] > vertex1[1]):
-        y += 1
-    if (vertex2[1] < vertex1[1]):
-        y -= 1
-
-    return(x, y)
-
-def construct_path(start, end, tree):
-    path_finished = False
-    next_coord = end
-    path = []
-
-    while (not path_finished):
-        for edge in tree.edges:
-            if (edge[1] == next_coord):
-                path.insert(0, edge[1])
-                next_coord = edge[0]
-
-        if (next_coord == start):
-            path_finished = True
-
-    return path
-
-
-def rrt(grid, start, end):
+def policy_iteration(grid, target):
     # TODO implement
-    # See grid_example1 for example input, output
-    #lower_corner = [max(c[i] for c in coordinates) for i in (0,1)]
-    max_x, max_y = [max(coords[i] for coords in grid) for i in (0,1)]
-    print("Dimensions: " + str(max_x), str(max_y))
-
-    G = Tree()
-    G.vertices.add(start)
-    K = max_x * max_y
-    k = 0
-
-    while(end not in G.vertices and k < K):
-        qrand = 0
-        if (random.random() <= 0.1):
-            qrand = end
-        else:
-            qrand = rand_config((max_x, max_y))
-        
-        qnear = nearest_vertex(qrand, G)
-        qnew = new_config(qnear, qrand)
-        if (qnew not in grid and qnew not in G.vertices):
-            G.vertices.add(qnew)
-            G.edges.append((qnear, qnew))
-        K += 1
-
-    path = construct_path(start, end, G)
-    return path
+    pass
 
 def print_grid(robot, target, obstacles, path=None):
     grid, cell_length = get_grid(obstacles)
@@ -346,6 +199,7 @@ def main(args):
             sleep(0.1)
 
     if args.command == "calibrate":
+        # TODO calibrate the x position too
         input("Move the robot far away and press Enter")
         robot, target, _ = get_positions()
         far_y = robot['center'][1]
@@ -362,9 +216,8 @@ def main(args):
         print("Calibration done.")
 
     else:
-        algorithm = args.algorithm
-
         # calibrate
+        # TODO calibrate the x position too
         try:
             with open('calibration.txt', 'r') as f:
                 far_y, far_offset, close_y, close_offset  = [float(x) for x in f.read().split()]
@@ -389,18 +242,17 @@ def main(args):
         transform(robot)
         if target == None:
             raise Exception("Can't see target (#{})".format(target_num))
-        path, cell_length = get_path(robot, target, obstacles, algorithm)
 
-        print_grid(robot, target, obstacles, path)
+        grid, cell_length = get_grid(obstacles)
+        print_grid(robot, target, obstacles)
         input("Press Enter to start")
 
-        while path:
-            target = cam_coordinates(path[0], cell_length)
-            vector = attraction_field(robot, target)
-            if not any(vector):
-                path.pop(0)
-                continue
+        gc = lambda cam_coordinates: grid_coordinates(cam_coordinates,
+                                                      cell_length)
+        policy = policy_iteration(grid, gc(target["center"]))
 
+        while gc(robot["center"]) != gc(target["center"]):
+            vector = policy[gc(robot["center"])]
             arg_list = map(lambda x: int(round(x)), get_command(robot, vector))
 
             if debug:
@@ -419,40 +271,7 @@ def main(args):
     writer.close()
 
 def test():
-    args = tuple(grid_example1[k] for k in ["grid", "start", "end"])
-    print("a* with grid_example1:", astar(*args))
-    print("rrt with grid_example1:", rrt(*args))
-    print()
-
-    robot, target, obstacles = positions(example5, "25")
-    print("grid with example5:", get_grid(obstacles))
-    print("a* with example5:", get_path(robot, target, obstacles, "astar")[0])
-    print("rrt with example5:", get_path(robot, target, obstacles, "rrt")[0])
-    print()
-
-    print("example6 with a*:")
-    robot, target, obstacles = positions(example6, "29")
-    path = get_path(robot, target, obstacles, "astar")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
-
-    print("example6 with rrt:")
-    robot, target, obstacles = positions(example6, "29")
-    path = get_path(robot, target, obstacles, "rrt")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
-
-    print("example7 with a*:")
-    robot, target, obstacles = positions(example7, "38")
-    path = get_path(robot, target, obstacles, "astar")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
-
-    print("example7 with rrt:")
-    robot, target, obstacles = positions(example7, "38")
-    path = get_path(robot, target, obstacles, "rrt")[0]
-    print_grid(robot, target, obstacles, path)
-    print()
+    pass
     
 if __name__ == '__main__':
     from sys import argv
@@ -473,7 +292,6 @@ if __name__ == '__main__':
     sub_parser.add_argument('host')
     sub_parser.add_argument('port')
     sub_parser.add_argument('target')
-    sub_parser.add_argument('algorithm', nargs='?', default="astar")
     sub_parser.set_defaults(command="run")
 
     args = parser.parse_args()
