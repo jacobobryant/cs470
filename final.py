@@ -4,7 +4,7 @@ from time import sleep
 import numpy as np
 import math
 import random
-from functools import reduce
+from functools import reduce, lru_cache
 from matplotlib.path import Path
 
 debug = False
@@ -70,6 +70,9 @@ min_speed = 3
 # speed when turning.
 max_proportion = 3.5
 
+radius_factor = 1.5
+granularity = 2.5
+
 def grid_coordinates(cam_coordinates, cell_length):
     return tuple(int(x / cell_length) for x in cam_coordinates)
 
@@ -134,28 +137,29 @@ def positions(data, target_num):
                       if key not in ('time', 'robot', target_num))
     return robot, target, obstacles
 
-def get_grid(obstacles):
-    radius_factor = 1.5
-    granularity = 2.5
+def bounding_square(coordinates):
+    x_bounds, y_bounds = [[m(c[i] for c in coordinates) 
+                           for m in (min, lambda li: max(li) + 1)]
+                          for i in [0, 1]]
+    return [(x, y) for x in range(*x_bounds) for y in range(*y_bounds)]
 
+def get_grid(obstacles):
     cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
                       for o in obstacles) / granularity
     gc = lambda coords: grid_coordinates(coords, cell_length)
 
     def get_occupied(o):
-        corners = tuple(gc(np.add(corner, radius_factor * np.subtract(corner, o['center'])))
-                        for corner in o["corners"])
+        corners = tuple(gc(np.add(corner, radius_factor *
+                np.subtract(corner, o['center']))) for corner in o["corners"])
         path = Path(corners)
-        x_bounds, y_bounds = [[m(c[i] for c in corners) 
-            for m in (min, lambda li: max(li) + 1)]
-            for i in [0, 1]]
-        points = [(x, y) for x in range(*x_bounds) for y in range(*y_bounds)]
+        points = bounding_square(corners)
         contained = path.contains_points(points, radius=-0.1)
         return {coords for i, coords in enumerate(points) if contained[i]}
 
     occupied = set.union(*[get_occupied(o) for o in obstacles])
     return occupied, cell_length
 
+@lru_cache(maxsize=None)
 def transition_probabilities(coordinates, action):
     # input: coordinates=(0, 0), action=pi/2 (up)
     # e.g. {(0, 1): ...
@@ -169,8 +173,27 @@ def policy_evaluation(policy, utility, grid, target):
     pass
 
 def policy_iteration(grid, target):
-    # TODO implement
-    pass
+    changed = True
+    utility = None
+    states = bounding_square(grid)
+    actions = [(2*math.pi) / i for i in range(1, 37)]
+    policy = {s: math.pi/2 for s in states}
+
+    while changed:
+        utility = policy_evaluation(policy, utility, grid, target)
+        changed = False
+        for s in states:
+
+            def action_utility(a):
+                tp = transition_probabilities(s, a)
+                return sum([tp[new_state] * utility[new_state] for new_state in tp])
+
+            best_action = max(actions, key=action_utility)
+            if best_action != policy[s]:
+                policy[s] = best_action
+                changed = True
+
+    return policy
 
 def print_grid(robot, target, obstacles, path=None):
     grid, cell_length = get_grid(obstacles)
