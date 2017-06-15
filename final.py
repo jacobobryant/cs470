@@ -72,6 +72,8 @@ max_proportion = 3.5
 
 radius_factor = 1.5
 granularity = 2.5
+goal_reward = 10
+wall_reward = -1
 
 def grid_coordinates(cam_coordinates, cell_length):
     return tuple(int(x / cell_length) for x in cam_coordinates)
@@ -169,8 +171,20 @@ def transition_probabilities(coordinates, action):
     #       (-1, 0):
     pass
 
-def policy_evaluation(policy, utility, grid, target):
-    pass
+def policy_evaluation(states, policy, utility, reward, target):
+    k = 3
+    gamma = 0.9
+
+    for _ in range(k):
+        utility = {s: reward(s) + gamma * action_utility(utility, s, policy[s])
+                   for s in states}
+
+    return utility
+
+def action_utility(utility, state, action):
+    tp = transition_probabilities(state, action)
+    return sum([tp[new_state] * utility[new_state]
+                for new_state in tp])
 
 def policy_iteration(grid, target):
     changed = True
@@ -179,16 +193,21 @@ def policy_iteration(grid, target):
     actions = [(2*math.pi) / i for i in range(1, 37)]
     policy = {s: math.pi/2 for s in states}
 
+    @lru_cache(max_size=None)
+    def reward(state):
+        if state == target:
+            return goal_reward
+        elif state in grid:
+            return wall_reward
+        else:
+            return 0
+
     while changed:
-        utility = policy_evaluation(policy, utility, grid, target)
+        utility = policy_evaluation(states, policy, utility, reward, target)
         changed = False
         for s in states:
-
-            def action_utility(a):
-                tp = transition_probabilities(s, a)
-                return sum([tp[new_state] * utility[new_state] for new_state in tp])
-
-            best_action = max(actions, key=action_utility)
+            au = lambda a: action_utility(utility, state, a)
+            best_action = max(actions, key=au)
             if best_action != policy[s]:
                 policy[s] = best_action
                 changed = True
