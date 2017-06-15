@@ -5,6 +5,7 @@ import numpy as np
 import math
 import random
 from functools import reduce
+from matplotlib.path import Path
 
 debug = False
 
@@ -134,11 +135,25 @@ def positions(data, target_num):
     return robot, target, obstacles
 
 def get_grid(obstacles):
-    # TODO make the grid more fine-grained
+    radius_factor = 1.5
+    granularity = 2.5
+
     cell_length = max(np.linalg.norm(np.subtract(*o["corners"][:2]))
-                      for o in obstacles)
-    corners = tuple(corner for o in obstacles for corner in o["corners"])
-    occupied = {grid_coordinates(corner, cell_length) for corner in corners}
+                      for o in obstacles) / granularity
+    gc = lambda coords: grid_coordinates(coords, cell_length)
+
+    def get_occupied(o):
+        corners = tuple(gc(np.add(corner, radius_factor * np.subtract(corner, o['center'])))
+                        for corner in o["corners"])
+        path = Path(corners)
+        x_bounds, y_bounds = [[m(c[i] for c in corners) 
+            for m in (min, lambda li: max(li) + 1)]
+            for i in [0, 1]]
+        points = [(x, y) for x in range(*x_bounds) for y in range(*y_bounds)]
+        contained = path.contains_points(points, radius=-0.1)
+        return {coords for i, coords in enumerate(points) if contained[i]}
+
+    occupied = set.union(*[get_occupied(o) for o in obstacles])
     return occupied, cell_length
 
 def transition_probabilities(coordinates, action):
@@ -170,7 +185,7 @@ def print_grid(robot, target, obstacles, path=None):
             return 'E'
         elif coords in grid:
             return '*'
-        elif coords in path:
+        elif path is not None and coords in path:
             return '-'
         else:
             return ' '
@@ -211,7 +226,6 @@ def main(args):
             sleep(0.1)
 
     if args.command == "calibrate":
-        # TODO calibrate the x position too
         input("Move the robot far away and press Enter")
         robot, target, _ = get_positions()
         far_y = robot['center'][1]
@@ -221,29 +235,45 @@ def main(args):
         robot, target, _ = get_positions()
         close_y = robot['center'][1]
         close_offset = target["center"][1] - close_y
+
+        input("Move the robot to the left and press Enter")
+        robot, target, _ = get_positions()
+        left_x = robot['center'][0]
+        left_offset = target["center"][0] - left_x
+
+        input("Move the robot to the right and press Enter")
+        robot, target, _ = get_positions()
+        right_x = robot['center'][0]
+        right_offset = target["center"][0] - right_x
         
         with open("calibration.txt", 'w') as f:
-            f.write(" ".join(str(x) for x in (far_y, far_offset, close_y, close_offset)))
+            f.write(" ".join(str(x) for x in (far_y, far_offset, close_y,
+                close_offset, left_x, left_offset, right_x, right_offset)))
 
         print("Calibration done.")
 
     else:
         # calibrate
-        # TODO calibrate the x position too
         try:
             with open('calibration.txt', 'r') as f:
-                far_y, far_offset, close_y, close_offset  = [float(x) for x in f.read().split()]
+                (far_y, far_offset, close_y, close_offset,
+                        left_x, left_offset, right_x, right_offset) = \
+                                [float(x) for x in f.read().split()]
 
-            slope = (close_offset - far_offset) / (close_y - far_y)
-            intercept = far_offset - slope * far_y
+            y_slope = (close_offset - far_offset) / (close_y - far_y)
+            y_intercept = far_offset - slope * far_y
+            x_slope = (right_offset - left_offset) / (right_x - left_x)
+            x_intercept = left_offset - slope * left_x
             
             def transform(robot):
-                y = robot['center'][1]
-                offset = slope * y + intercept
-                robot['center'][1] += offset
+                x, y = robot['center']
+                y_offset = y_slope * y + y_intercept
+                x_offset = x_slope * x + x_intercept
+                robot['center'][1] += y_offset
+                robot['center'][0] += x_offset
                 if debug:
-                    print('perceived position:', y)
-                    print('transformed position:', y + offset)
+                    print('perceived position:', (x, y))
+                    print('transformed position:', robot['center'])
 
         except IOError:
             print("couldn't read calibration data")
@@ -282,7 +312,7 @@ def main(args):
     writer.close()
 
 def test():
-    pass
+    print_grid(*positions(example7, "38"))
     
 if __name__ == '__main__':
     from sys import argv
