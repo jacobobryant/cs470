@@ -3,9 +3,12 @@ import json
 from time import sleep
 import numpy as np
 import math
+from math import pi, atan, degrees
 import random
 from functools import reduce, lru_cache
 from matplotlib.path import Path
+from scipy.stats import norm
+import json
 
 debug = False
 
@@ -59,9 +62,9 @@ example7 = {"time": 7869.709783838, "41": {"corners": [[923.0, 739.0], [988.0, 7
 # 7       * *
 # 8
 # 9
-grid_example1 = {"grid": {(3,2), (4,2), (4,3), (5,3), (5,4),
+grid_example1 = {"grid": {(0, 0), (3,2), (4,2), (4,3), (5,3), (5,4),
                           (5,5), (5,6), (4,6), (4,7), (3,7), (9,9)},
-        "start": (0,4), "end": (9,4)}
+        "start": (0,4), "end": (7,4)}
 
 # The minimum speed for an individual wheel.
 min_speed = 3
@@ -73,7 +76,8 @@ max_proportion = 3.5
 radius_factor = 1.5
 granularity = 2.5
 goal_reward = 10
-wall_reward = -1
+wall_reward = -5
+
 
 def grid_coordinates(cam_coordinates, cell_length):
     return tuple(int(x / cell_length) for x in cam_coordinates)
@@ -161,39 +165,60 @@ def get_grid(obstacles):
     occupied = set.union(*[get_occupied(o) for o in obstacles])
     return occupied, cell_length
 
-@lru_cache(maxsize=None)
-def transition_probabilities(coordinates, action):
-    # input: coordinates=(0, 0), action=pi/2 (up)
-    # e.g. {(0, 1): ...
-    #       (-1, 1):
-    #       (1, 1): ... 
-    #       (1, 0):
-    #       (-1, 0):
-    pass
+def prob(right, left):
+    sd = pi/4
 
-def policy_evaluation(states, policy, utility, reward, target):
-    k = 3
+    # clip the boundaries if needed
+    if left <= pi and right > pi:
+        right = 0
+    elif right <= pi and left > pi:
+        left = pi
+    elif right > pi and left > pi:
+        right, left = (0, 0)
+
+    dist = norm(pi/2, sd)
+    total = dist.cdf(pi) - dist.cdf(0)
+    return (dist.cdf(left) - dist.cdf(right)) / total
+
+@lru_cache(maxsize=None)
+def transition_probabilities(action, coordinates):
+    if coordinates != (0, 0):
+        tp = transition_probabilities(action, (0, 0))
+        return {tuple(np.add(coordinates, k)): tp[k] for k in tp}
+
+    boundaries = [(i * (pi/2) + atan(1/2) * sign - action) % (2*pi)
+                  for i in range(1, 5) for sign in (-1, 1)]
+    adjacent_states = [(1, 0), (1, 1), (0, 1), (-1, 1),
+                       (-1, 0), (-1, -1), (0, -1), (1, -1)]
+    tp = {s: prob(boundaries[i], boundaries[(i+1)%len(boundaries)])
+             for i, s in enumerate(adjacent_states)}
+    return {s: tp[s] for s in tp if tp[s] != 0}
+
+def policy_evaluation(states, policy, utility, reward):
+    k = 10
     gamma = 0.9
 
     for _ in range(k):
-        utility = {s: reward(s) + gamma * action_utility(utility, s, policy[s])
+        utility = {s: reward(s) or gamma * action_utility(utility, s, policy[s])
                    for s in states}
 
+    print("UTILITY")
+    print(json.dumps({str(k): utility[k] for k in utility}, indent=4))
     return utility
 
 def action_utility(utility, state, action):
-    tp = transition_probabilities(state, action)
-    return sum([tp[new_state] * utility[new_state]
+    tp = transition_probabilities(action, state)
+    return sum([tp[new_state] * utility.get(new_state, 0)
                 for new_state in tp])
 
 def policy_iteration(grid, target):
     changed = True
-    utility = None
     states = bounding_square(grid)
-    actions = [(2*math.pi) / i for i in range(1, 37)]
-    policy = {s: math.pi/2 for s in states}
+    utility = {}
+    actions = [(2*math.pi) / i for i in range(1, 9)]
+    policy = {s: 3*math.pi/2 for s in states}
 
-    @lru_cache(max_size=None)
+    @lru_cache(maxsize=None)
     def reward(state):
         if state == target:
             return goal_reward
@@ -203,10 +228,10 @@ def policy_iteration(grid, target):
             return 0
 
     while changed:
-        utility = policy_evaluation(states, policy, utility, reward, target)
+        utility = policy_evaluation(states, policy, utility, reward)
         changed = False
         for s in states:
-            au = lambda a: action_utility(utility, state, a)
+            au = lambda a: action_utility(utility, s, a)
             best_action = max(actions, key=au)
             if best_action != policy[s]:
                 policy[s] = best_action
@@ -353,8 +378,17 @@ def main(args):
 
     writer.close()
 
+def pprint(d):
+    print(json.dumps({str(k): d[k] for k in d}, indent=4))
+
 def test():
     print_grid(*positions(example7, "38"))
+    print(transition_probabilities(0, (0,0)))
+    print(transition_probabilities(pi/2-0.5, (0,0)))
+    print(transition_probabilities(pi/4, (0,0)))
+    print(transition_probabilities(pi/2-atan(1/2), (0,0)))
+    pprint(policy_iteration(grid_example1["grid"],
+        grid_example1["end"]))
     
 if __name__ == '__main__':
     from sys import argv
