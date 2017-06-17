@@ -75,9 +75,8 @@ max_proportion = 3.5
 
 radius_factor = 1.5
 granularity = 2.5
-goal_reward = 10
-wall_reward = -5
-
+goal_reward = 100
+wall_reward = -1
 
 def grid_coordinates(cam_coordinates, cell_length):
     return tuple(int(x / cell_length) for x in cam_coordinates)
@@ -143,10 +142,13 @@ def positions(data, target_num):
                       if key not in ('time', 'robot', target_num))
     return robot, target, obstacles
 
+def get_bounds(coordinates):
+    return [[m(c[i] for c in coordinates) 
+             for m in (min, lambda li: max(li) + 1)]
+            for i in [0, 1]]
+
 def bounding_square(coordinates):
-    x_bounds, y_bounds = [[m(c[i] for c in coordinates) 
-                           for m in (min, lambda li: max(li) + 1)]
-                          for i in [0, 1]]
+    x_bounds, y_bounds = get_bounds(coordinates)
     return [(x, y) for x in range(*x_bounds) for y in range(*y_bounds)]
 
 def get_grid(obstacles):
@@ -202,8 +204,8 @@ def policy_evaluation(states, policy, utility, reward):
         utility = {s: reward(s) or gamma * action_utility(utility, s, policy[s])
                    for s in states}
 
-    print("UTILITY")
-    print(json.dumps({str(k): utility[k] for k in utility}, indent=4))
+    #print("UTILITY")
+    #print(json.dumps({str(k): utility[k] for k in utility}, indent=4))
     return utility
 
 def action_utility(utility, state, action):
@@ -212,10 +214,11 @@ def action_utility(utility, state, action):
                 for new_state in tp])
 
 def policy_iteration(grid, target):
+    n_actions = 8
     changed = True
     states = bounding_square(grid)
     utility = {}
-    actions = [(2*math.pi) / i for i in range(1, 9)]
+    actions = [i * (2*math.pi / n_actions) for i in range(n_actions)]
     policy = {s: 3*math.pi/2 for s in states}
 
     @lru_cache(maxsize=None)
@@ -381,14 +384,38 @@ def main(args):
 def pprint(d):
     print(json.dumps({str(k): d[k] for k in d}, indent=4))
 
+def print_policy(policy, grid=None):
+    x_bounds, y_bounds = get_bounds(policy.keys())
+
+    def symbol(state):
+        if state in grid:
+            return ' '
+
+        return {0: '→', pi/4: '↗', pi/2: '↑', 3*pi/4: '↖',
+                pi: '←', 5*pi/4: '↙', 3*pi/2: '↓', 7*pi/4: '↘'}[policy[state]]
+
+    print(" ", "".join("{:2d}".format(x) for x in range(*x_bounds)))
+    for y in range(*y_bounds):
+        print("{:2d}".format(y), *[symbol((x, y))
+            for x in range(*x_bounds)])
+
 def test():
     print_grid(*positions(example7, "38"))
     print(transition_probabilities(0, (0,0)))
     print(transition_probabilities(pi/2-0.5, (0,0)))
     print(transition_probabilities(pi/4, (0,0)))
     print(transition_probabilities(pi/2-atan(1/2), (0,0)))
-    pprint(policy_iteration(grid_example1["grid"],
-        grid_example1["end"]))
+    print_policy(policy_iteration(grid_example1["grid"],
+                                  grid_example1["end"]),
+                 grid_example1["grid"])
+
+
+    robot, target, obstacles = positions(example7, "38")
+    grid, cell_length = get_grid(obstacles)
+
+    policy = policy_iteration(grid,
+            grid_coordinates(target["center"], cell_length))
+    print_policy(policy, grid)
     
 if __name__ == '__main__':
     from sys import argv
