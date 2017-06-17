@@ -3,12 +3,13 @@ import json
 from time import sleep
 import numpy as np
 import math
-from math import pi, atan, degrees
+from math import pi, atan, degrees, sin, cos
 import random
 from functools import reduce, lru_cache
 from matplotlib.path import Path
 from scipy.stats import norm
 import json
+from time import time
 
 debug = False
 
@@ -67,16 +68,23 @@ grid_example1 = {"grid": {(0, 0), (3,2), (4,2), (4,3), (5,3), (5,4),
         "start": (0,4), "end": (7,4)}
 
 # The minimum speed for an individual wheel.
-min_speed = 3
+min_speed = 2
 
 # The maximum proportion of the outer wheel speed to the inner wheel
 # speed when turning.
 max_proportion = 3.5
 
-radius_factor = 1.0
-granularity = 3.5
-goal_reward = 10
+# The higher this is, the larger the obstacles will appear to the robot.
+radius_factor = 1.15
+
+# The higher this is, the smaller the grid squares will be.
+granularity = 2.0
+
+goal_reward = 100
 wall_reward = -1
+std_dev = pi/3
+k = 10
+gamma = 0.9
 
 def grid_coordinates(cam_coordinates, cell_length):
     return tuple(int(x / cell_length) for x in cam_coordinates)
@@ -105,7 +113,8 @@ def closer_side(robot, target, front_side="front"):
     return "left" if distance(robot["corners"][0+offset]) < distance(
             robot["corners"][1+offset]) else "right"
 
-def get_command(robot, vector):
+def get_command(robot, action):
+    vector = (cos(action), -1 * sin(action))
     angle = angle_between(robot["orientation"], vector)
     front_side = "front"
     if angle > math.pi/2:
@@ -168,27 +177,30 @@ def get_grid(obstacles):
     return occupied, cell_length
 
 def prob(right, left):
-    sd = pi/5
+    lower_bound = pi/6
+    upper_bound = 5 * pi/6
 
-    # clip the boundaries if needed
-    #if left <= pi and right > pi:
-    #    right = 0
-    #elif right <= pi and left > pi:
-    #    left = pi
-    #elif right > pi and left > pi:
-    #    right, left = (0, 0)
-    if left > 3*pi/2:
-        left -= 2*pi
-    if right > 3*pi/2:
-        right -= 2*pi
+    inside = lambda a: a >= lower_bound and a <= upper_bound
 
-    dist = norm(pi/2, sd)
-    #total = dist.cdf(pi) - dist.cdf(0)
-    total = dist.cdf(3*pi/2) - dist.cdf(-pi/2)
+    #clip the boundaries if needed
+    if inside(left) and not inside(right):
+        right = lower_bound
+    elif inside(right) and not inside(left):
+        left = upper_bound
+    elif not inside(left) and not inside(right):
+        right, left = (0, 0)
+    #if left > 3*pi/2:
+    #    left -= 2*pi
+    #if right > 3*pi/2:
+    #    right -= 2*pi
+
+    dist = norm(pi/2, std_dev)
+    total = dist.cdf(upper_bound) - dist.cdf(lower_bound)
+    #total = dist.cdf(3*pi/2) - dist.cdf(-pi/2)
     
-    if left < right:
-        return (dist.cdf(left) - dist.cdf(-pi/2) +
-                dist.cdf(3*pi/2) - dist.cdf(right)) / total
+    #if left < right:
+    #    return (dist.cdf(left) - dist.cdf(-pi/2) +
+    #            dist.cdf(3*pi/2) - dist.cdf(right)) / total
 
     return (dist.cdf(left) - dist.cdf(right)) / total
 
@@ -207,8 +219,6 @@ def transition_probabilities(action, coordinates):
     return {s: tp[s] for s in tp if tp[s] != 0}
 
 def policy_evaluation(states, policy, utility, reward):
-    k = 1
-    gamma = 0.9
 
     for _ in range(k):
         utility = {s: reward(s) or gamma * action_utility(utility, s, policy[s])
@@ -226,12 +236,11 @@ def action_utility(utility, state, action):
                 for new_state in tp])
 
 def policy_iteration(grid, target):
-    n_actions = 8
+    n_actions = 32
     changed = True
     states = bounding_square(grid)
     utility = {}
     actions = [i * (2*math.pi / n_actions) for i in range(n_actions)]
-    print("actions:", actions)
     policy = {s: 3*math.pi/2 for s in states}
 
     @lru_cache(maxsize=None)
@@ -258,7 +267,7 @@ def policy_iteration(grid, target):
 
     return policy
 
-def print_grid(robot, target, obstacles, path=None):
+def print_grid(robot, target, obstacles, path=None, compact=False):
     grid, cell_length = get_grid(obstacles)
     start = grid_coordinates(robot["center"], cell_length)
     end = grid_coordinates(target["center"], cell_length)
@@ -277,10 +286,20 @@ def print_grid(robot, target, obstacles, path=None):
             return ' '
 
     max_x, max_y = [max(coords[i] for coords in squares) for i in (0,1)]
-    print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
-    for y in range(max_y):
-        print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
 
+    if compact:
+        for y in range(max_y):
+            print(*[symbol((x, y)) for x in range(max_x + 1)], sep='', end='|\n')
+    else:
+        print(" ", "".join("{:2d}".format(x) for x in range(max_x + 1)))
+        for y in range(max_y):
+            print("{:2d}".format(y), *[symbol((x, y)) for x in range(max_x + 1)])
+
+def intersecting(robot, target):
+    r = radius(robot)
+    distance = np.linalg.norm(np.subtract(robot["center"],
+                target["center"]))
+    return distance < r
 
 def main(args):
     host = args.host
@@ -347,9 +366,9 @@ def main(args):
                                 [float(x) for x in f.read().split()]
 
             y_slope = (close_offset - far_offset) / (close_y - far_y)
-            y_intercept = far_offset - slope * far_y
+            y_intercept = far_offset - y_slope * far_y
             x_slope = (right_offset - left_offset) / (right_x - left_x)
-            x_intercept = left_offset - slope * left_x
+            x_intercept = left_offset - x_slope * left_x
             
             def transform(robot):
                 x, y = robot['center']
@@ -371,16 +390,22 @@ def main(args):
             raise Exception("Can't see target (#{})".format(target_num))
 
         grid, cell_length = get_grid(obstacles)
-        print_grid(robot, target, obstacles)
-        input("Press Enter to start")
+        print_grid(robot, target, obstacles, compact=True)
+        input("Press Enter")
 
         gc = lambda cam_coordinates: grid_coordinates(cam_coordinates,
                                                       cell_length)
+        start_time = time()
         policy = policy_iteration(grid, gc(target["center"]))
+        end_time = time()
+        print("time taken:", int(end_time - start_time), "seconds")
+        print_policy(policy, grid, compact=True)
+        input("Press Enter")
 
-        while gc(robot["center"]) != gc(target["center"]):
-            vector = policy[gc(robot["center"])]
-            arg_list = map(lambda x: int(round(x)), get_command(robot, vector))
+        #while gc(robot["center"]) != gc(target["center"]):
+        while not intersecting(robot, target):
+            action = policy[gc(robot["center"])]
+            arg_list = map(lambda x: int(round(x)), get_command(robot, action))
 
             if debug:
                 print("command:", list(arg_list))
@@ -400,20 +425,32 @@ def main(args):
 def pprint(d):
     print(json.dumps({str(k): d[k] for k in d}, indent=4))
 
-def print_policy(policy, grid=None):
+def angle_distance(a, b):
+    v1 = (cos(a), sin(a))
+    v2 = (cos(b), sin(b))
+    return angle_between(v1, v2)
+
+def print_policy(policy, grid=None, compact=False):
     x_bounds, y_bounds = get_bounds(policy.keys())
 
     def symbol(state):
         if state in grid:
             return ' '
 
-        return {0: '→', pi/4: '↗', pi/2: '↑', 3*pi/4: '↖',
-                pi: '←', 5*pi/4: '↙', 3*pi/2: '↓', 7*pi/4: '↘'}[policy[state]]
+        directions =  {0: '→', pi/4: '↗', pi/2: '↑', 3*pi/4: '↖',
+                pi: '←', 5*pi/4: '↙', 3*pi/2: '↓', 7*pi/4: '↘'}
+        closest = min(directions,
+                key=lambda a: angle_distance(a, policy[state]))
+        return directions[closest]
 
-    print(" ", "".join("{:2d}".format(x) for x in range(*x_bounds)))
-    for y in range(*y_bounds):
-        print("{:2d}".format(y), *[symbol((x, y))
-            for x in range(*x_bounds)])
+    if compact:
+        for y in range(*y_bounds):
+            print(''.join([symbol((x, y)) for x in range(*x_bounds)]), end='|\n')
+    else:
+        print(" ", "".join("{:2d}".format(x) for x in range(*x_bounds)))
+        for y in range(*y_bounds):
+            print("{:2d}".format(y), *[symbol((x, y))
+                for x in range(*x_bounds)])
 
 def print_utility(utility):
     x_bounds, y_bounds = get_bounds(utility.keys())
@@ -436,8 +473,6 @@ def test():
     print(transition_probabilities(3*pi/2, (7,3)))
     print(transition_probabilities(pi/2, (7,3)))
     input("Press Enter")
-
-
     
     print_policy(policy_iteration(grid_example1["grid"],
                                   grid_example1["end"]),
