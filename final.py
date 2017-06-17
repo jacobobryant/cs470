@@ -73,9 +73,9 @@ min_speed = 3
 # speed when turning.
 max_proportion = 3.5
 
-radius_factor = 1.5
-granularity = 2.5
-goal_reward = 100
+radius_factor = 1.0
+granularity = 3.5
+goal_reward = 10
 wall_reward = -1
 
 def grid_coordinates(cam_coordinates, cell_length):
@@ -168,18 +168,28 @@ def get_grid(obstacles):
     return occupied, cell_length
 
 def prob(right, left):
-    sd = pi/4
+    sd = pi/5
 
     # clip the boundaries if needed
-    if left <= pi and right > pi:
-        right = 0
-    elif right <= pi and left > pi:
-        left = pi
-    elif right > pi and left > pi:
-        right, left = (0, 0)
+    #if left <= pi and right > pi:
+    #    right = 0
+    #elif right <= pi and left > pi:
+    #    left = pi
+    #elif right > pi and left > pi:
+    #    right, left = (0, 0)
+    if left > 3*pi/2:
+        left -= 2*pi
+    if right > 3*pi/2:
+        right -= 2*pi
 
     dist = norm(pi/2, sd)
-    total = dist.cdf(pi) - dist.cdf(0)
+    #total = dist.cdf(pi) - dist.cdf(0)
+    total = dist.cdf(3*pi/2) - dist.cdf(-pi/2)
+    
+    if left < right:
+        return (dist.cdf(left) - dist.cdf(-pi/2) +
+                dist.cdf(3*pi/2) - dist.cdf(right)) / total
+
     return (dist.cdf(left) - dist.cdf(right)) / total
 
 @lru_cache(maxsize=None)
@@ -190,19 +200,21 @@ def transition_probabilities(action, coordinates):
 
     boundaries = [(i * (pi/2) + atan(1/2) * sign - action) % (2*pi)
                   for i in range(1, 5) for sign in (-1, 1)]
-    adjacent_states = [(1, 0), (1, 1), (0, 1), (-1, 1),
-                       (-1, 0), (-1, -1), (0, -1), (1, -1)]
+    adjacent_states = [(1, 0), (1, -1), (0, -1), (-1, -1),
+                       (-1, 0), (-1, 1), (0, 1), (1, 1)]
     tp = {s: prob(boundaries[i], boundaries[(i+1)%len(boundaries)])
              for i, s in enumerate(adjacent_states)}
     return {s: tp[s] for s in tp if tp[s] != 0}
 
 def policy_evaluation(states, policy, utility, reward):
-    k = 10
+    k = 1
     gamma = 0.9
 
     for _ in range(k):
         utility = {s: reward(s) or gamma * action_utility(utility, s, policy[s])
                    for s in states}
+        #print_utility(utility)
+        #input("Press Enter")
 
     #print("UTILITY")
     #print(json.dumps({str(k): utility[k] for k in utility}, indent=4))
@@ -219,6 +231,7 @@ def policy_iteration(grid, target):
     states = bounding_square(grid)
     utility = {}
     actions = [i * (2*math.pi / n_actions) for i in range(n_actions)]
+    print("actions:", actions)
     policy = {s: 3*math.pi/2 for s in states}
 
     @lru_cache(maxsize=None)
@@ -239,6 +252,9 @@ def policy_iteration(grid, target):
             if best_action != policy[s]:
                 policy[s] = best_action
                 changed = True
+
+        #print_policy(policy, grid)
+        #input("Press Enter")
 
     return policy
 
@@ -399,16 +415,33 @@ def print_policy(policy, grid=None):
         print("{:2d}".format(y), *[symbol((x, y))
             for x in range(*x_bounds)])
 
+def print_utility(utility):
+    x_bounds, y_bounds = get_bounds(utility.keys())
+
+    def symbol(state):
+        return int(utility[state] * 10)
+
+    print(" ", "".join("{:4d}".format(x) for x in range(*x_bounds)))
+    for y in range(*y_bounds):
+        print("{:2d}".format(y), ''.join('{:4d}'.format(symbol((x, y)))
+            for x in range(*x_bounds)))
+
 def test():
     print_grid(*positions(example7, "38"))
     print(transition_probabilities(0, (0,0)))
     print(transition_probabilities(pi/2-0.5, (0,0)))
     print(transition_probabilities(pi/4, (0,0)))
     print(transition_probabilities(pi/2-atan(1/2), (0,0)))
+    print()
+    print(transition_probabilities(3*pi/2, (7,3)))
+    print(transition_probabilities(pi/2, (7,3)))
+    input("Press Enter")
+
+
+    
     print_policy(policy_iteration(grid_example1["grid"],
                                   grid_example1["end"]),
                  grid_example1["grid"])
-
 
     robot, target, obstacles = positions(example7, "38")
     grid, cell_length = get_grid(obstacles)
